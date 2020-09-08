@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - 5400:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+  reviews-api:
+    build: ./api
+    restart: unless-stopped
+    depends_on:
+      - "postgres"
+    volumes:
+      - ./api:/usr/src/reviews-api
+      - /usr/src/reviews-api/node_modules
+    ports:
+      - 3030:3030
+    environment:
+      API_PORT: 3030
+      DATABASE_URL: postgres://postgres:@postgres:5400/postgres
+  reviews-service:
+    build: ./service
+    restart: unless-stopped
+    depends_on:
+      - "postgres"
+    volumes:
+      - ./api:/usr/src/service
+      - /usr/src/service/node_modules
+    ports:
+      - 4030:4030
+    environment:
+      SERVICE_PORT: 4030
+      DATABASE_URL: postgres://postgres:@postgres:5400/postgres
+volumes:
+  db_data:
