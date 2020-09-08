@@ -14,7 +14,7 @@ services:
     build: ./api
     restart: unless-stopped
     depends_on:
-      - "postgres"
+      - postgres
     volumes:
       - ./api:/usr/src/reviews-api
       - /usr/src/reviews-api/node_modules
@@ -27,7 +27,7 @@ services:
     build: ./service
     restart: unless-stopped
     depends_on:
-      - "postgres"
+      - postgres
     volumes:
       - ./api:/usr/src/service
       - /usr/src/service/node_modules
@@ -36,5 +36,15 @@ services:
     environment:
       SERVICE_PORT: 4030
       DATABASE_URL: postgres://postgres:@postgres:5400/postgres
+  web-app:
+    image: "node:14-alpine"
+    user: "node"
+    working_dir: /usr/src/app
+    volumes:
+      - ./app:/usr/src/app
+    command: "yarn run build"
+    depends_on:
+      - reviews-service
+      - reviews-api
 volumes:
   db_data:
