@@ -81,6 +81,19 @@ exports.up = (pgm) => {
     },
   });
 
+  pgm.createTable('BusinessHours', {
+    id: {
+      type: 'text',
+      notNull: true,
+      primaryKey: true,
+    },
+    createdAt: {
+      type: 'timestamp',
+      notNull: true,
+      default: pgm.func('current_timestamp'),
+    },
+  });
+
   pgm.createTable('TimePeriods', {
     id: {
       type: 'text',
@@ -111,47 +124,6 @@ exports.up = (pgm) => {
       notNull: true,
     },
     closeTime: {
-      type: 'text',
-      notNull: true,
-    },
-  });
-
-  pgm.createTable('BusinessHours', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
-    createdAt: {
-      type: 'timestamp',
-      notNull: true,
-      default: pgm.func('current_timestamp'),
-    },
-  });
-
-  pgm.createTable('PriceLists', {
-    priceListId: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
-    locationId: {
-      type: 'text',
-      notNull: true,
-      references: '"Locations"',
-      onDelete: 'cascade',
-    },
-    createdAt: {
-      type: 'timestamp',
-      notNull: true,
-      default: pgm.func('current_timestamp'),
-    },
-    labels: {
-      type: 'text',
-      notNull: true,
-    },
-    sourceUrl: { type: 'text' },
-    sections: {
       type: 'text',
       notNull: true,
     },
@@ -196,7 +168,7 @@ exports.up = (pgm) => {
     address: {
       type: 'text',
       notNull: true,
-      references: '"PostalAdress"',
+      references: '"PostalAddress"',
       onDelete: 'cascade',
     },
     primaryCategory: {
@@ -255,6 +227,34 @@ exports.up = (pgm) => {
     relationshipData: {
       type: 'text',
     }
+  });
+
+  pgm.createTable('PriceLists', {
+    priceListId: {
+      type: 'text',
+      notNull: true,
+      primaryKey: true,
+    },
+    locationId: {
+      type: 'text',
+      notNull: true,
+      references: '"Locations"',
+      onDelete: 'cascade',
+    },
+    createdAt: {
+      type: 'timestamp',
+      notNull: true,
+      default: pgm.func('current_timestamp'),
+    },
+    labels: {
+      type: 'text',
+      notNull: true,
+    },
+    sourceUrl: { type: 'text' },
+    sections: {
+      type: 'text',
+      notNull: true,
+    },
   });
 
 }

@@ -1,0 +1,1 @@
+DATABASE_URL=postgres://postgres:@localhost:5400/reviews npm run migrate up
