@@ -9,13 +9,17 @@
     "start": "babel-node -x \".ts\" src/index.ts",
     "dev": "nodemon --exec npm start",
     "build": "babel src -d dist",
-    "migrate": "node-pg-migrate"
+    "migrate": "node-pg-migrate",
+    "fixtures": "babel-node -x \".ts\" src/fixtures/generate.ts"
   },
   "dependencies": {
+    "@types/faker": "^5.1.0",
     "@types/koa": "^2.11.4",
     "@types/koa-json": "^2.0.18",
     "@types/koa-logger": "^3.1.1",
     "@types/koa-router": "^7.4.1",
+    "faker": "^5.1.0",
+    "knex": "^0.21.5",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-json": "^2.0.2",
