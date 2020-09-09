@@ -16,8 +16,8 @@ const pg = knex({
 });
 
 const generate = async () => {
-  const locationsCount = Number(process.env.LOCATIONS_NUMBER) || 10;
-  const reviewsCount = Number(process.env.REVIEWS_NUMBER) || 10;
+  const args = process.argv.slice(2)
+  const locationsCount = Number(args[0]) || 1;
 
   const addresses = count(locationsCount).map(() => ({
     regionCode: faker.address.countryCode(),
@@ -81,33 +81,8 @@ const generate = async () => {
     locationId: locationsResults[index % locationsCount].id,
   }));
 
-  const locationAccountsResults = await pg('AccountsLocations').insert(locationAccounts).returning('*');
+  const locationAccountsResults = await pg('Accounts_Locations').insert(locationAccounts).returning('*');
   console.log(locationAccountsResults);
-
-  const reviewReplies = count(reviewsCount).map(() => ({
-    comment: faker.lorem.sentences(),
-  }));
-  const reviewRepliesResults = await pg('ReviewReplies').insert(reviewReplies).returning('*');
-  console.log(locationAccountsResults);
-
-  const reviewers = count(reviewsCount).map(() => ({
-    profilePhotoUrl: faker.internet.url(),
-    displayName: faker.name.findName(),
-    isAnonymous: faker.random.boolean(),
-  }));
-  const reviewersResults = await pg('Reviewers').insert(reviewers).returning('*');
-  console.log(reviewersResults);
-
-  const reviews = count(reviewsCount).map((_, index) => ({
-    locationId: locationsResults[faker.random.number(locationsResults.length - 1)].id,
-    reviewer: reviewersResults[index].id,
-    reviewReply: reviewRepliesResults[index].id,
-    starRating: faker.random.number(5).toString(),
-    comment: faker.lorem.sentences(),
-  }));
-
-  const reviewsResults = await pg('Reviews').insert(reviews).returning('*');
-  console.log(reviewsResults);
 
   pg.destroy();
   console.log('Finished generating data');

@@ -10,7 +10,8 @@
     "dev": "nodemon --exec npm start",
     "build": "babel src -d dist",
     "migrate": "node-pg-migrate",
-    "fixtures": "babel-node -x \".ts\" src/fixtures/generate.ts"
+    "fixtures:locations": "babel-node -x \".ts\" src/fixtures/locations.ts",
+    "fixtures:reviews": "babel-node -x \".ts\" src/fixtures/reviews.ts"
   },
   "dependencies": {
     "@types/faker": "^5.1.0",

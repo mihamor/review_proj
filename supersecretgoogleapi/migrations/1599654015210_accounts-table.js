@@ -10,7 +10,7 @@ exports.up = pgm => {
       notNull: true,
     },
   });
-  pgm.createTable('AccountsLocations', {
+  pgm.createTable('Accounts_Locations', {
     accountId: {
       type: 'integer',
       references: '"Accounts"',
@@ -27,6 +27,6 @@ exports.up = pgm => {
 };
 
 exports.down = pgm => {
-  pgm.dropTable('AccountsLocations', { ifExists: true });
+  pgm.dropTable('Accounts_Locations', { ifExists: true });
   pgm.dropTable('Accounts', { ifExists: true });
 };

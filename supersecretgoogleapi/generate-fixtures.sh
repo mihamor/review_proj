@@ -1,1 +1,0 @@
-LOCATIONS_NUMBER=20 REVIEWS_NUMBER=20 DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb yarn run fixtures
