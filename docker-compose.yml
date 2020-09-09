@@ -23,7 +23,7 @@ services:
       - 3030:3030
     environment:
       API_PORT: 3030
-      DATABASE_URL: postgres://postgres:@postgres:5400/reviews
+      DATABASE_URL: postgres://postgres:@postgres:5432/reviews
   reviews-service:
     build: ./service
     restart: unless-stopped
@@ -36,7 +36,7 @@ services:
       - 4030:4030
     environment:
       SERVICE_PORT: 4030
-      DATABASE_URL: postgres://postgres:@postgres:5400/reviews
+      DATABASE_URL: postgres://postgres:@postgres:5432/reviews
   supersecretgoogleapi:
     build: ./supersecretgoogleapi
     restart: unless-stopped
@@ -49,7 +49,7 @@ services:
       - 5030:5030
     environment:
       GOOGLE_API_PORT: 5030
-      DATABASE_URL: postgres://googleapiuser:@postgres:5400/supersecretgoogleapidb
+      DATABASE_URL: postgres://googleapiuser:@postgres:5432/supersecretgoogleapidb
   web-app:
     image: "node:14-alpine"
     user: "node"
