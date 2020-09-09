@@ -18,7 +18,7 @@ exports.up = pgm => {
       notNull: true,
     },
   });
-  
+
   pgm.createTable('Reviewers', {
     id: {
       type: 'text',
@@ -80,4 +80,8 @@ exports.up = pgm => {
   });
 };
 
-exports.down = pgm => {};
+exports.down = pgm => {
+  pgm.dropTable('Reviews', { ifExists: true });
+  pgm.dropTable('ReviewReplies', { ifExists: true });
+  pgm.dropTable('Reviewers', { ifExists: true });
+};

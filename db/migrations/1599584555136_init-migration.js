@@ -259,4 +259,11 @@ exports.up = (pgm) => {
 
 }
 
-exports.down = pgm => {};
+exports.down = pgm => {
+  pgm.dropTable('PriceLists', { ifExists: true });
+  pgm.dropTable('Locations', { ifExists: true });
+  pgm.dropTable('TimePeriods', { ifExists: true });
+  pgm.dropTable('BusinessHours', { ifExists: true });
+  pgm.dropTable('LocationKey', { ifExists: true });
+  pgm.dropTable('PostalAddress', { ifExists: true });
+};
