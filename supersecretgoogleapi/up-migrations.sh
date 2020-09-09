@@ -1,0 +1,1 @@
+DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb npm run migrate up

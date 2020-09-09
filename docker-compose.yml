@@ -8,7 +8,7 @@ services:
       - 5400:5432
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./api/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust 
   reviews-api:
@@ -37,6 +37,19 @@ services:
     environment:
       SERVICE_PORT: 4030
       DATABASE_URL: postgres://postgres:@postgres:5400/reviews
+  supersecretgoogleapi:
+    build: ./supersecretgoogleapi
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    volumes:
+      - ./supersecretgoogleapi:/usr/src/supersecretgoogleapi
+      - /usr/src/supersecretgoogleapi/node_modules
+    ports:
+      - 5030:5030
+    environment:
+      GOOGLE_API_PORT: 5030
+      DATABASE_URL: postgres://googleapiuser:@postgres:5400/supersecretgoogleapidb
   web-app:
     image: "node:14-alpine"
     user: "node"
