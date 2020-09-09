@@ -6,12 +6,13 @@ exports.up = pgm => {
   pgm.createTable('ReviewReplies', {
     id: 'id',
     comment: {
-      type: 'timestamp',
+      type: 'text',
       notNull: true,
     },
     updateTime: {
       type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
   });
 
@@ -54,10 +55,12 @@ exports.up = pgm => {
     createTime: {
       type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
     updateTime: {
       type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
     reviewReply: {
       type: 'serial',
