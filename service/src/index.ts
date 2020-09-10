@@ -1,24 +1,20 @@
-import Koa from "koa";
-import Router from "koa-router";
-import logger from "koa-logger";
-import json from "koa-json";
+import express from "express";
+import morgan from 'morgan';
 
 import config from './config';
 
-const app = new Koa();
-const router = new Router();
+const app = express();
 
-router.get("/", async (ctx, next) => {
-  ctx.body = { msg: "Hello from service server!" };
+app.use(morgan('combined'));
 
-  await next();
+
+app.get('/', (req, res) => {
+  res.json({
+    msg: 'Hello from service!',
+  });
 });
 
-app.use(json());
-app.use(logger());
-
-app.use(router.routes()).use(router.allowedMethods());
-
+  
 app.listen(config.servicePort, () => {
-  console.log("Service started");
+  console.log(`Service listening at http://localhost:${config.servicePort}`)
 });

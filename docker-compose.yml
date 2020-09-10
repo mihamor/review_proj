@@ -58,7 +58,6 @@ services:
       - ./app:/usr/src/app
     command: "yarn run build"
     depends_on:
-      - reviews-service
       - reviews-api
 volumes:
   db_data:
