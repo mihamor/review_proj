@@ -4,27 +4,20 @@ exports.shorthands = undefined;
 
 exports.up = pgm => {
   pgm.createTable('ReviewReplies', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     comment: {
-      type: 'timestamp',
+      type: 'text',
       notNull: true,
     },
     updateTime: {
       type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
   });
-  
+
   pgm.createTable('Reviewers', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     profilePhotoUrl: {
       type: 'text',
     },
@@ -38,19 +31,15 @@ exports.up = pgm => {
   });
 
   pgm.createTable('Reviews', {
-    reviewId: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     locationId: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"Locations"',
       onDelete: 'cascade'
     },
     reviewer: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"Reviewers"',
       onDelete: 'cascade'
@@ -66,13 +55,15 @@ exports.up = pgm => {
     createTime: {
       type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
     updateTime: {
       type: 'timestamp',
       notNull: true,
+      default: pgm.func('current_timestamp'),
     },
     reviewReply: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"ReviewReplies"',
       onDelete: 'cascade'
@@ -80,4 +71,8 @@ exports.up = pgm => {
   });
 };
 
-exports.down = pgm => {};
+exports.down = pgm => {
+  pgm.dropTable('Reviews', { ifExists: true });
+  pgm.dropTable('ReviewReplies', { ifExists: true });
+  pgm.dropTable('Reviewers', { ifExists: true });
+};

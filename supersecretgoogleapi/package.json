@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "supersecretgoogleapi",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -7,22 +7,31 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check --watch",
     "start": "babel-node -x \".ts\" src/index.ts",
-    "dev": "nodemon --exec npm start",
+    "dev": "nodemon --legacy-watch --exec npm start",
     "build": "babel src -d dist",
-    "migrate": "node-pg-migrate"
+    "migrate": "node-pg-migrate",
+    "fixtures:locations": "babel-node -x \".ts\" src/fixtures/locations.ts",
+    "fixtures:reviews": "babel-node -x \".ts\" src/fixtures/reviews.ts"
   },
   "dependencies": {
+    "@types/faker": "^5.1.0",
     "@types/koa": "^2.11.4",
     "@types/koa-json": "^2.0.18",
     "@types/koa-logger": "^3.1.1",
     "@types/koa-router": "^7.4.1",
+    "@types/morgan": "^1.9.1",
+    "express": "^4.17.1",
+    "faker": "^5.1.0",
+    "knex": "^0.21.5",
+    "knex-paginate": "^1.2.3",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.1",
     "koa-router": "^9.4.0",
-    "nodemon": "^2.0.4",
+    "morgan": "^1.10.0",
     "node-pg-migrate": "^5.6.0",
+    "nodemon": "^2.0.4",
     "pg": "^8.3.3"
   },
   "devDependencies": {
