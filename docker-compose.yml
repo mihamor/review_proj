@@ -24,19 +24,6 @@ services:
     environment:
       API_PORT: 3030
       DATABASE_URL: postgres://postgres:@postgres:5432/reviews
-  reviews-service:
-    build: ./service
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    volumes:
-      - ./api:/usr/src/service
-      - /usr/src/service/node_modules
-    ports:
-      - 4030:4030
-    environment:
-      SERVICE_PORT: 4030
-      DATABASE_URL: postgres://postgres:@postgres:5432/reviews
   supersecretgoogleapi:
     build: ./supersecretgoogleapi
     restart: unless-stopped
@@ -50,6 +37,21 @@ services:
     environment:
       GOOGLE_API_PORT: 5030
       DATABASE_URL: postgres://googleapiuser:@postgres:5432/supersecretgoogleapidb
+  reviews-service:
+    build: ./service
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - supersecretgoogleapi
+    volumes:
+      - ./api:/usr/src/service
+      - /usr/src/service/node_modules
+    ports:
+      - 4030:4030
+    environment:
+      SERVICE_PORT: 4030
+      GOOGLE_API_URL: http://supersecretgoogleapi:5030
+      DATABASE_URL: postgres://postgres:@postgres:5432/reviews
   web-app:
     image: "node:14-alpine"
     user: "node"
