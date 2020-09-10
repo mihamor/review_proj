@@ -71,10 +71,17 @@ app.get('/reviews', async (req, res) => {
   }
 
   const perPage = 5;
-  const reviews = await pg('Reviews').where({
+  const reviewsNormalized = await pg('Reviews').where({
     locationId,
-  }).select('id', 'locationId', 'reviewer', 'starRating',
-    'comment', 'createTime', 'updateTime', 'reviewReply')
+  })
+  .join('Reviewers', 'Reviews.reviewer', '=', 'Reviewers.id')
+  .join('ReviewReplies', 'Reviews.reviewReply', '=', 'ReviewReplies.id')
+  .select('Reviews.id as id', 'locationId', 'reviewer', 'starRating',
+    'Reviews.comment as comment', 'createTime',
+    'Reviews.updateTime as updateTime', 'reviewReply',
+    'profilePhotoUrl', 'displayName',
+    'isAnonymous', 'ReviewReplies.comment as replyComment',
+    'ReviewReplies.updateTime as replyUpdateTime')
   .orderBy('createTime', 'desc')
   .paginate({
     perPage,
@@ -82,14 +89,33 @@ app.get('/reviews', async (req, res) => {
     isLengthAware: true,
   });
 
-  const { lastPage } = reviews.pagination;
+  const reviews = reviewsNormalized.data.map((reviewNormalized) => ({
+    id: reviewNormalized.id,
+    locationId: reviewNormalized.locationId,
+    reviewer: {
+      id: reviewNormalized.reviewer,
+      displayName: reviewNormalized.displayName,
+      profilePhotoUrl: reviewNormalized.profilePhotoUrl
+    },
+    starRating: reviewNormalized.starRating,
+    comment: reviewNormalized.comment,
+    createTime: reviewNormalized.createTime,
+    updateTime: reviewNormalized.updateTime,
+    reviewReply: {
+      id: reviewNormalized.reviewReply,
+      comment: reviewNormalized.replyComment,
+      updateTime: reviewNormalized.replyUpdateTime,
+    },
+  }));
+
+  const { lastPage } = reviewsNormalized.pagination;
   return res.json({
     ...(
-      reviews.data.length === perPage && lastPage !== page ?
+      reviews.length === perPage && lastPage !== page ?
       { nextPage: `/reviews?page=${page + 1}&locationId=${locationId}` } :
       {}
     ),
-    results: reviews.data,
+    results: reviews,
   });
 });
 
