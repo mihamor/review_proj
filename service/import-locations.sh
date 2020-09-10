@@ -1,0 +1,1 @@
+DATABASE_URL=postgres://postgres:@localhost:5400/reviews FAKE_API_DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb yarn run fixtures:import
