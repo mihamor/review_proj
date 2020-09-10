@@ -35,14 +35,10 @@ exports.up = pgm => {
     locationId: {
       type: 'serial',
       notNull: true,
-      references: '"Locations"',
-      onDelete: 'cascade'
     },
     reviewer: {
       type: 'serial',
       notNull: true,
-      references: '"Reviewers"',
-      onDelete: 'cascade'
     },
     starRating: {
       type: 'text',
@@ -65,8 +61,6 @@ exports.up = pgm => {
     reviewReply: {
       type: 'serial',
       notNull: true,
-      references: '"ReviewReplies"',
-      onDelete: 'cascade'
     },
   });
 };

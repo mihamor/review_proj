@@ -12,8 +12,6 @@ exports.up = pgm => {
     },
     locationId: {
       type: 'integer',
-      references: '"Locations"',
-      onDelete: 'cascade',
       notNull: true,
     },
   });

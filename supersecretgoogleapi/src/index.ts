@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/locations', async (req, res) => {
-  const page = Number(req.query.page) || 0;
+  const page = Number(req.query.page) || 1;
   const accountId = req.headers['account-id'];
 
   if(!accountId) {
@@ -32,24 +32,27 @@ app.get('/locations', async (req, res) => {
     });
   }
 
+  const perPage = 5;
   const locations = await pg('Accounts_Locations').where({
     accountId: accountId,
-  }).join('Locations', 'Accounts_Locations.locationId', '=', 'Locations.id').
-  select('id', 'createdAt', 'languageCode',
+  }).join('Locations', 'Accounts_Locations.locationId', '=', 'Locations.id')
+  .select('id', 'createdAt', 'languageCode',
     'storeCode', 'locationName', 'primaryPhone', 'additionalPhones',
     'address', 'additionalCategories', 'websiteUrl', 'regularHours',
     'specialHours', 'serviceArea', 'locationKey', 'labels', 'adWordsLocationExtensions',
     'latlng', 'openInfo', 'locationState', 'attributes', 'metadata',
-    'profile', 'relationshipData').paginate({
-    perPage: 5,
+    'profile', 'relationshipData')
+  .orderBy('createdAt', 'desc')
+  .paginate({
+    perPage,
     currentPage: page,
     isLengthAware: true,
-  });
+  })
 
   const { lastPage } = locations.pagination;
   return res.json({
     ...(
-      lastPage !== page ?
+      locations.data.length === perPage && lastPage !== page  ?
       { nextPage: `/locations?page=${page + 1}` } :
       {}
     ),
@@ -58,7 +61,7 @@ app.get('/locations', async (req, res) => {
 });
 
 app.get('/reviews', async (req, res) => {
-  const page = Number(req.query.page) || 0;
+  const page = Number(req.query.page) || 1;
   const locationId = req.query.locationId;
 
   if(!locationId) {
@@ -67,11 +70,14 @@ app.get('/reviews', async (req, res) => {
     });
   }
 
+  const perPage = 5;
   const reviews = await pg('Reviews').where({
     locationId,
   }).select('id', 'locationId', 'reviewer', 'starRating',
-    'comment', 'createTime', 'updateTime', 'reviewReply').paginate({
-    perPage: 5,
+    'comment', 'createTime', 'updateTime', 'reviewReply')
+  .orderBy('createTime', 'desc')
+  .paginate({
+    perPage,
     currentPage: page,
     isLengthAware: true,
   });
@@ -79,7 +85,7 @@ app.get('/reviews', async (req, res) => {
   const { lastPage } = reviews.pagination;
   return res.json({
     ...(
-      lastPage !== page ?
+      reviews.data.length === perPage && lastPage !== page ?
       { nextPage: `/reviews?page=${page + 1}&locationId=${locationId}` } :
       {}
     ),
