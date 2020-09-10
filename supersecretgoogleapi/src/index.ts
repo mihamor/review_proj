@@ -95,7 +95,8 @@ app.get('/reviews', async (req, res) => {
     reviewer: {
       id: reviewNormalized.reviewer,
       displayName: reviewNormalized.displayName,
-      profilePhotoUrl: reviewNormalized.profilePhotoUrl
+      profilePhotoUrl: reviewNormalized.profilePhotoUrl,
+      isAnonymous: reviewNormalized.isAnonymous,
     },
     starRating: reviewNormalized.starRating,
     comment: reviewNormalized.comment,
