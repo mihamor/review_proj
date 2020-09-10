@@ -4,11 +4,7 @@ exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.createTable('PostalAddress', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     createdAt: {
       type: 'timestamp',
       notNull: true,
@@ -49,11 +45,7 @@ exports.up = (pgm) => {
   });
 
   pgm.createTable('LocationKey', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     createdAt: {
       type: 'timestamp',
       notNull: true,
@@ -82,11 +74,7 @@ exports.up = (pgm) => {
   });
 
   pgm.createTable('BusinessHours', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     createdAt: {
       type: 'timestamp',
       notNull: true,
@@ -95,18 +83,14 @@ exports.up = (pgm) => {
   });
 
   pgm.createTable('TimePeriods', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     createdAt: {
       type: 'timestamp',
       notNull: true,
       default: pgm.func('current_timestamp'),
     },
     bussinesHoursId: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"BusinessHours"',
       onDelete: 'cascade',
@@ -130,11 +114,7 @@ exports.up = (pgm) => {
   });
 
   pgm.createTable('Locations', {
-    id: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     createdAt: {
       type: 'timestamp',
       notNull: true,
@@ -166,7 +146,7 @@ exports.up = (pgm) => {
       notNull: true,
     },
     address: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"PostalAddress"',
       onDelete: 'cascade',
@@ -182,7 +162,7 @@ exports.up = (pgm) => {
       type: 'text'
     },
     regularHours: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"BusinessHours"',
       onDelete: 'cascade',
@@ -194,7 +174,7 @@ exports.up = (pgm) => {
       type: 'text',
     },
     locationKey: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"LocationKey"',
       onDelete: 'cascade',
@@ -230,13 +210,9 @@ exports.up = (pgm) => {
   });
 
   pgm.createTable('PriceLists', {
-    priceListId: {
-      type: 'text',
-      notNull: true,
-      primaryKey: true,
-    },
+    id: 'id',
     locationId: {
-      type: 'text',
+      type: 'serial',
       notNull: true,
       references: '"Locations"',
       onDelete: 'cascade',
