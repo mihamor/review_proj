@@ -8,7 +8,8 @@
     "type-check:watch": "npm run type-check --watch",
     "start": "babel-node -x \".ts\" src/index.ts",
     "dev": "nodemon --exec npm start",
-    "build": "babel src -d dist"
+    "build": "babel src -d dist",
+    "fixtures:import": "babel-node -x \".ts\" src/importLocations.ts"
   },
   "dependencies": {
     "@types/express": "^4.17.8",
