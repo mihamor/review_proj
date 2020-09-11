@@ -12,8 +12,8 @@ app.use(morgan('combined'));
 
 const runTasks = async () => {
   const taskChunkSize = 5;
-  const tasks = await generateTasks(taskChunkSize);
-  tasks.forEach((task) => task.start());
+  const task = await generateTasks(taskChunkSize);
+  task.start();
 }
 
 runTasks();

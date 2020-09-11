@@ -91,25 +91,31 @@ NormalizedReviewReferences => (
 
 export const generateTasks = async (numberToFire: number) => {
   console.log('Generating tasks...');
-  const locationsJobsList = await pg('Locations_Jobs').select('*');
-  return locationsJobsList.map((locationsJobs, index) => (
-    cron.schedule(`${Math.floor(index / numberToFire)} * * * * *`, async () => {
-      const { id, locationId } = locationsJobs;
-      console.log(`Job id: ${id}: Watching location's(id${locationId})`);
 
-      const reviewsToAdd = await recursiveFetchReviews(locationsJobs.locationId);
-      console.log(`Job id: ${id}: Reviews to add: ${reviewsToAdd.length}`);
+  let tasks: cron.ScheduledTask[] = [];
+  return cron.schedule(`*/5 * * * *`, async () => {
+    //stop old jobs
+    console.log(tasks, 'Stoping old jobs');
+    tasks.forEach((task) => task.stop());
+    const locationsJobsList = await pg('Locations_Jobs').select('*');
+    tasks = locationsJobsList.map((locationsJobs, index) => (
+      cron.schedule(`${Math.floor(index / numberToFire)} * * * * *`, async () => {
+        const { id, locationId } = locationsJobs;
+        console.log(`Job id: ${id}: Watching location's(id${locationId})`);
 
-      if(reviewsToAdd.length) {
+        const reviewsToAdd = await recursiveFetchReviews(locationsJobs.locationId);
+        console.log(`Job id: ${id}: Reviews to add: ${reviewsToAdd.length}`);
 
-        const { replies, reviewers, reviews } = normalizeReviews(reviewsToAdd);
-        const reviewersResults = await pg('Reviewers').insert(reviewers).returning('*');
-        console.log(`Job id: ${id}: Succesfully added ${reviewersResults.length} reviewers`);
-        const repliesResults = await pg('ReviewReplies').insert(replies).returning('*');
-        console.log(`Job id: ${id}: Succesfully added ${repliesResults.length} reviewers`);
-        const addedReviewsResults = await pg('Reviews').insert(reviews).returning('*');
-        console.log(`Job id: ${id}: Succesfully added ${addedReviewsResults.length} reviews`);
-      }
-    }, { scheduled: false })
-  ));
+        if(reviewsToAdd.length) {
+          const { replies, reviewers, reviews } = normalizeReviews(reviewsToAdd);
+          const reviewersResults = await pg('Reviewers').insert(reviewers).returning('*');
+          console.log(`Job id: ${id}: Succesfully added ${reviewersResults.length} reviewers`);
+          const repliesResults = await pg('ReviewReplies').insert(replies).returning('*');
+          console.log(`Job id: ${id}: Succesfully added ${repliesResults.length} reviewers`);
+          const addedReviewsResults = await pg('Reviews').insert(reviews).returning('*');
+          console.log(`Job id: ${id}: Succesfully added ${addedReviewsResults.length} reviews`);
+        }
+      })
+    ));
+  });
 };
