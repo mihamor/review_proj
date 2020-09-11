@@ -89,11 +89,11 @@ NormalizedReviewReferences => (
 );
 
 
-export const generateTasks = async () => {
+export const generateTasks = async (numberToFire: number) => {
   console.log('Generating tasks...');
   const locationsJobsList = await pg('Locations_Jobs').select('*');
-  return locationsJobsList.map((locationsJobs) => (
-    cron.schedule('*/10 * * * * *', async () => {
+  return locationsJobsList.map((locationsJobs, index) => (
+    cron.schedule(`${index / numberToFire} * * * * *`, async () => {
       const { id, locationId } = locationsJobs;
       console.log(`Job id: ${id}: Watching location's(id${locationId})`);
 

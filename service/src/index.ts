@@ -11,8 +11,16 @@ console.log(config);
 app.use(morgan('combined'));
 
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const chunk = (array: any[], chunkSize: number) => (
+  Array(Math.ceil(array.length / chunkSize)).fill(0).map((_, i) => (
+    array.slice(i * chunkSize, i * chunkSize + chunkSize)
+  ))
+);
+
 const runTasks = async () => {
-  const tasks = await generateTasks();
+  const tasks = await generateTasks(5);
   tasks.forEach((task) => task.start());
 }
 
