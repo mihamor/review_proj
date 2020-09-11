@@ -7,7 +7,7 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check --watch",
     "start": "babel-node -x \".ts\" src/index.ts",
-    "dev": "nodemon --exec npm start",
+    "dev": "nodemon -e ts --exec npm start",
     "build": "babel src -d dist",
     "fixtures:import": "babel-node -x \".ts\" src/importLocations.ts"
   },

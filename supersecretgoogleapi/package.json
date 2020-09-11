@@ -7,7 +7,7 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check --watch",
     "start": "babel-node -x \".ts\" src/index.ts",
-    "dev": "nodemon --legacy-watch --exec npm start",
+    "dev": "nodemon -e ts --exec npm start",
     "build": "babel src -d dist",
     "migrate": "node-pg-migrate",
     "fixtures:locations": "babel-node -x \".ts\" src/fixtures/locations.ts",
