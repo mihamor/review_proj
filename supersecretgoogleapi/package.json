@@ -14,6 +14,7 @@
     "fixtures:reviews": "babel-node -x \".ts\" src/fixtures/reviews.ts"
   },
   "dependencies": {
+    "@types/express-rate-limit": "^5.1.0",
     "@types/faker": "^5.1.0",
     "@types/koa": "^2.11.4",
     "@types/koa-json": "^2.0.18",
@@ -21,6 +22,7 @@
     "@types/koa-router": "^7.4.1",
     "@types/morgan": "^1.9.1",
     "express": "^4.17.1",
+    "express-rate-limit": "^5.1.3",
     "faker": "^5.1.0",
     "knex": "^0.21.5",
     "knex-paginate": "^1.2.3",

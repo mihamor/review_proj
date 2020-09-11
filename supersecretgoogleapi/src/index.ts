@@ -1,6 +1,7 @@
 import express from "express";
 import knex from 'knex';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import { attachPaginate } from "knex-paginate";
 
 import config from './config';
@@ -13,6 +14,12 @@ const pg = knex({
   searchPath: ['knex', 'public'],
 });
 
+const limiter = rateLimit({
+  windowMs: 1000, // 1 seconds
+  max: 10 // limit each IP to 100 requests per windowMs
+});
+
+app.use(limiter);
 app.use(morgan('combined'));
 
 
