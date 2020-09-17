@@ -1,14 +1,24 @@
 import express from "express";
 import morgan from 'morgan';
+import bodyParser from 'body-parser';
+import knex from 'knex';
+import fetch from 'node-fetch';
 
 import config from './config';
-import { generateTasks } from './cronTasks';
+import { generateTasks, recursiveFetchLocations } from './cronTasks';
 
 const app = express();
 
 console.log(config);
 
 app.use(morgan('combined'));
+app.use(bodyParser.json());
+
+const pg = knex({
+  client: 'pg',
+  connection: config.databaseUrl,
+  searchPath: ['knex', 'public'],
+});
 
 const runTasks = async () => {
   const taskChunkSize = 5;
@@ -22,6 +32,34 @@ app.get('/', (req, res) => {
   res.json({
     msg: 'Hello from service!',
   });
+});
+
+
+app.post('/watch-account', async (req, res) => {
+  const { accountId: accountIdStr } = req.body;
+  const accountId = Number(accountIdStr);
+  if (!accountId) {
+    return res.status(400).json({
+      error: 'Invalid account id',
+    });
+  }
+
+  try {
+    const locations = await recursiveFetchLocations(accountId);
+    const locationsJobs = locations.map((location) => ({
+      locationId: location.id,
+    }));
+    if(!locationsJobs.length) {
+      return res.json([]);
+    }
+    const locationsJobsResults = await pg('Locations_Jobs').insert(locationsJobs).returning('*');
+    res.json(locationsJobsResults);
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+    });
+  }
+
 });
 
   

@@ -1,24 +1,45 @@
-import Koa from "koa";
-import Router from "koa-router";
-import logger from "koa-logger";
-import json from "koa-json";
+import express from "express";
+import morgan from 'morgan';
+import bodyParser from 'body-parser';
+import fetch from 'node-fetch';
 
 import config from './config';
 
-const app = new Koa();
-const router = new Router();
+const app = express();
 
-router.get("/", async (ctx, next) => {
-  ctx.body = { msg: "Hello from api server!" };
+console.log(config);
 
-  await next();
+app.use(morgan('combined'));
+app.use(bodyParser.json());
+
+app.get('/', (req, res) => {
+  res.json({
+    msg: 'Hello from api!',
+  });
 });
 
-app.use(json());
-app.use(logger());
+app.post('/watch-account', async (req, res) => {
+  const { accountId } = req.body;
 
-app.use(router.routes()).use(router.allowedMethods());
+  try {
+    const response = await fetch(`${config.serviceUrl}/watch-account`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ accountId }),
+    });
+    const responseJson = await response.json();
 
+    res.json(responseJson);
+  } catch(error) {
+    console.error(error);
+    res.status(400).send({ error: error.message });
+  }
+});
+
+  
 app.listen(config.apiPort, () => {
-  console.log("Api started");
+  console.log(`API listening at http://localhost:${config.apiPort}`)
 });

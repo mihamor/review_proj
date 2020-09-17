@@ -9,6 +9,8 @@ import {
   Review,
   ReviewReply,
   Reviewer,
+  Location,
+  GoogleLocationsResponse,
 } from './types';
 
 
@@ -52,6 +54,44 @@ const recursiveFetchReviews = async (
       console.error(`Some error occured during review fetch: ${error.message}`);
     }
     return accReviews;
+}
+
+
+export const recursiveFetchLocations = async (
+  accountId: number,
+  locations: Location[] = [],
+  page: number = 1,
+): Promise<Location[]> => {
+    let accLocations = locations;
+    try {
+      const locationsData = await fetch(`${config.googleApiUrl}/locations?page=${page}`, {
+        headers: {
+          'account-id': accountId.toString(),
+        },
+      });
+      const locationsJson: GoogleLocationsResponse = await locationsData.json();
+
+      const { nextPage, results } = locationsJson;
+      if (!results.length) return accLocations;
+
+      const promiseResults = await Promise.all(
+        results.map(async (location: Location) => {
+          const foundedLocation = await pg('Locations_Jobs').select('*').where({ locationId: location.id });
+          return foundedLocation[0];
+        })
+      );
+      const locationsToAdd = results.filter((_v, index) => !promiseResults[index]);
+      const someAlreadyAdded = locationsToAdd.length !== results.length;
+      accLocations = [...accLocations, ...locationsToAdd];
+
+      if(!someAlreadyAdded && nextPage) {
+        return recursiveFetchLocations(accountId, accLocations, page + 1);
+      }
+
+    } catch(error) {
+      console.error(`Some error occured during locations fetch: ${error.message}`);
+    }
+    return accLocations;
 }
 
 type NormalizedReviewReferences = {

@@ -33,8 +33,16 @@ export type Review = {
   updateTime: string,
 };
 
+export type Location = {
+  id: number,
+};
+
 export type GoogleReviewResponse = {
   nextPage?: string,
   results: Review [],
 };
 
+export type GoogleLocationsResponse = {
+  nextPage?: string,
+  results: Location [],
+};
