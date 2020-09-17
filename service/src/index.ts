@@ -14,6 +14,7 @@ console.log(config);
 app.use(morgan('combined'));
 app.use(bodyParser.json());
 
+
 const pg = knex({
   client: 'pg',
   connection: config.databaseUrl,
@@ -36,6 +37,13 @@ app.get('/', (req, res) => {
 
 
 app.post('/watch-account', async (req, res) => {
+  const reviewsSecret = req.headers['reviews-secret'];
+  if(reviewsSecret !== config.reviewsSecret) {
+    return res.status(400).json({
+      error: 'Invalid secret',
+    });
+  }
+
   const { accountId: accountIdStr } = req.body;
   const accountId = Number(accountIdStr);
   if (!accountId) {

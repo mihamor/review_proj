@@ -25,6 +25,7 @@ app.post('/watch-account', async (req, res) => {
     const response = await fetch(`${config.serviceUrl}/watch-account`, {
       method: 'POST',
       headers: {
+        ...(config.reviewsSecret ? { 'reviews-secret': config.reviewsSecret } : {}),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
