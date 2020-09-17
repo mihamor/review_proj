@@ -1,5 +1,7 @@
 import knex from 'knex';
 import faker from 'faker';
+import gaussian from 'gaussian';
+
 
 import config from '../config';
 
@@ -8,6 +10,14 @@ console.log(config);
 const count = (n: number) => [...Array(n)];
 
 const accountIds = [1, 2, 3];
+
+function generateGaussian(mean: number ,std: number){
+  const _2PI = Math.PI * 2;
+  const u1 = Math.random();
+  const u2 = Math.random();
+  const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(_2PI * u2);
+  return z0 * std + mean;
+}
 
 const pg = knex({
   client: 'pg',
@@ -45,14 +55,24 @@ const generate = async () => {
   const reviewersResults = await pg('Reviewers').insert(reviewers).returning('*');
   console.log(reviewersResults);
 
-  const reviews = count(reviewsCount).map((_, index) => ({
-    locationId: locationsResults[faker.random.number(locationsResults.length - 1)].id,
-    reviewer: reviewersResults[index].id,
-    reviewReply: reviewRepliesResults[index].id,
-    starRating: faker.random.number(5).toString(),
-    comment: faker.lorem.sentences(),
-    createTime: randomDate(dateFrom, dateTo),
-  }));
+  let locationMeans: { [id:number]: number } = {};
+  const reviews = count(reviewsCount).map((_, index) => {
+    const locationId = locationsResults[faker.random.number(locationsResults.length - 1)].id;
+    if(!locationMeans[locationId]) {
+      const mean = faker.random.number({ min: 1, max: 5 });
+      locationMeans[locationId] = mean;
+    }
+
+    const locationMean = locationMeans[locationId];
+    return {
+      locationId,
+      reviewer: reviewersResults[index].id,
+      reviewReply: reviewRepliesResults[index].id,
+      starRating: Math.floor(generateGaussian(locationMean, 0.5)).toString(),
+      comment: faker.lorem.sentences(),
+      createTime: randomDate(dateFrom, dateTo),
+    };
+  });
 
   const reviewsResults = await pg('Reviews').insert(reviews).returning('*');
   console.log(reviewsResults);
