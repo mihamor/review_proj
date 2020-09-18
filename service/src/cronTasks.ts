@@ -77,7 +77,8 @@ export const recursiveFetchLocations = async (
       const promiseResults = await Promise.all(
         results.map(async (location: Location) => {
           const foundedLocation = await pg('Locations_Jobs').select('*').where({ locationId: location.id });
-          return foundedLocation[0];
+          const alreadyAdded = accLocations.some((addedLocation) => location.id === addedLocation.id);
+          return foundedLocation[0] || alreadyAdded;
         })
       );
       const locationsToAdd = results.filter((_v, index) => !promiseResults[index]);
