@@ -54,7 +54,8 @@ app.get('/locations', async (req, res) => {
     perPage,
     currentPage: page,
     isLengthAware: true,
-  })
+  });
+  const uniqueLocationIds = Array.from(new Set(locations.data.map((item) => item.id)));
 
   const { lastPage } = locations.pagination;
   return res.json({
@@ -63,7 +64,9 @@ app.get('/locations', async (req, res) => {
       { nextPage: `/locations?page=${page + 1}` } :
       {}
     ),
-    results: locations.data,
+    results: uniqueLocationIds.map((id) => (
+      locations.data.filter((location) => location.id === id)[0]
+    )),
   });
 });
 
