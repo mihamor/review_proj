@@ -19,6 +19,10 @@ export default class Location {
       'specialHours', 'serviceArea', 'locationKey', 'labels', 'adWordsLocationExtensions',
       'latlng', 'openInfo', 'locationState', 'attributes', 'metadata',
       'profile', 'relationshipData');
-    return locations;
+    
+    const uniqueLocationIds = Array.from(new Set(locations.map((item) => item.id)));
+    return uniqueLocationIds.map((id) => (
+      locations.filter((location) => location.id === id)[0]
+    ));
   }
 }

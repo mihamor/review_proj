@@ -43,6 +43,9 @@ export default class Review {
         updateTime: reviewNormalized.replyUpdateTime,
       },
     }));
-    return reviews;
+    const uniqueReviewsIds = Array.from(new Set(reviews.map((item) => item.id)));
+    return uniqueReviewsIds.map((id) => (
+      reviews.filter((review) => review.id === id)[0]
+    ));;
   }
 };
