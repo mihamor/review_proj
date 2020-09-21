@@ -1,68 +1,34 @@
 import React, {
   useEffect,
   useState,
-  useCallback,
+  useMemo,
 } from 'react';
 import { RouteComponentProps, Redirect} from 'react-router-dom'
-import moment from 'moment';
+import { MessageOutlined, StarOutlined } from '@ant-design/icons';
+import { List, Space } from 'antd';
+import { letterFrequency } from '@visx/mock-data';
+import { Group } from '@visx/group';
+import { Bar } from '@visx/shape';
+import { scaleLinear, scaleBand } from '@visx/scale';
+
 import "antd/dist/antd.css";
 
 import { registerSocketConnection } from '../../socket/connection';
-import { Location, Review } from '../../types';
+import { Location } from '../../types';
 import './Dashboard.css';
+import { calculateLocationsData } from './calculatedData';
 
-const reviewsGroupByDateComponent = (reviews: Review[], token: string) => {
-  const reviewsWeekNumbers = reviews.reduce<{ [key: string]: Review[]}>((acc, review) => {
-    const group = moment(review.createTime).utc().format(token);
-    return {
-      ...acc,
-      [group]: [
-        ...(acc[group] || []),
-        review,
-      ]
-    };
-  }, {});
-  return reviewsWeekNumbers;
-};
-
-const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Review[]}) => {
-  const weekNumbers = Object.keys(weeklyGroupedReviews);
-  if(!weekNumbers.length) return [];
-  const lastRecordedWeek = Number(weekNumbers[weekNumbers.length - 1]);
-  const firstRecordedWeek = Number(weekNumbers[0]);
-  const totalWeeks = lastRecordedWeek - firstRecordedWeek + 1;
-  return [...Array(totalWeeks).fill(0)].reduce<{ avg: number, diff: number }[]>((prevArray, _, index) => {
-    const thisWeekReviews = weeklyGroupedReviews[firstRecordedWeek + index];
-    const prevAvg = index ? prevArray[index - 1].avg : 0;
-    if(!thisWeekReviews) {
-      return index ? [
-        ...prevArray,
-        {
-          avg: prevAvg,
-          diff: 0,
-        },
-      ]: prevArray;
-    }
-
-    const avg = thisWeekReviews.reduce(
-      (sum, review) => (sum + Number(review.starRating)),
-      0
-    ) / thisWeekReviews.length;
-    console.log(avg, prevAvg);
-    return [
-      ...prevArray,
-      {
-        avg,
-        diff: avg - prevAvg,
-      },
-    ]
-  }, []);
-};
+const IconText = ({ icon, text }: { icon: React.FC, text: string}) => (
+  <Space>
+    {React.createElement(icon)}
+    {text}
+  </Space>
+);
 
 const Dashboard: React.FC<RouteComponentProps> = ({
   history,
 }) => {
-  const [locations, setLocations] = useState<Location[]>();
+  const [locations, setLocations] = useState<Location[]>([]);
   const accountId = localStorage.getItem('accountId');
   useEffect(() => {
     if(accountId) {
@@ -73,43 +39,55 @@ const Dashboard: React.FC<RouteComponentProps> = ({
     };
   }, []);
 
-  const getCalculatedLocationsData = useCallback(() => {
-    if(!locations) return {};
-    console.log(locations);
-    const locationsData = locations.reduce((acc, location) => ({
-      ...acc,
-      [location.id]: {
-        avgRating: (() => {
-          if(!location.reviews.length) return 0;
-          const totalRating = location.reviews.reduce(
-            (sum, review) => (sum + Number(review.starRating)),
-            0
-          );
-          return totalRating / location.reviews.length;
-        })(),
-        ratingDynamics: (() => {
-          const reviewsGroupedByWeeks = reviewsGroupByDateComponent(location.reviews, 'W');
-          const reviewsWeekToAverageDiff = reviewsGetWeekToAverageDiff(reviewsGroupedByWeeks);
-          return {
-            reviewsGroupedByWeeks,
-            reviewsWeekToAverageDiff,
-          };
-        })(),
-      },
-    }), {});
-    return locationsData;
-  }, [locations]);
+  const calculatedLocationsData = useMemo(() => (
+    calculateLocationsData(locations)
+  ), [locations]);
 
 
   useEffect(() => {
-    console.log(getCalculatedLocationsData());
-  }, [getCalculatedLocationsData]);
+    console.log(calculatedLocationsData);
+  }, [calculatedLocationsData]);
 
 
   return (
     accountId ? (
       <div className="Dashboard">
-        {locations?.toString()}
+        <List
+          className="LocationList"
+          itemLayout="vertical"
+          size="large"
+          pagination={{
+            onChange: page => {
+              console.log(page);
+            },
+            pageSize: 3,
+          }}
+          dataSource={locations}
+          footer={
+            <div>
+              <b>ant design</b> footer part
+            </div>
+          }
+          renderItem={(item) => (
+            <List.Item
+              key={item.id}
+              actions={[
+                <IconText
+                  icon={StarOutlined} text={calculatedLocationsData[item.id].avgRating.toString()}
+                  key="list-vertical-star-o"
+                />,
+                <IconText icon={MessageOutlined} text={item.reviews.length.toString()} key="list-vertical-message" />,
+              ]}
+            >
+              <List.Item.Meta
+                title={<a>{item.locationName}</a>}
+                description={`Phone number: ${item.primaryPhone}`}
+              />
+              {`Reviews in total: ${item.reviews.length}`}
+              {}
+            </List.Item>
+          )}
+        />,
       </div>
     )
     : <Redirect to='/' />
