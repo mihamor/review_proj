@@ -4,24 +4,60 @@ import React, {
   useCallback,
 } from 'react';
 import { RouteComponentProps, Redirect} from 'react-router-dom'
-import websocket from 'websocket';
+import moment from 'moment';
 import "antd/dist/antd.css";
 
 import { registerSocketConnection } from '../../socket/connection';
-import { Location } from '../../types';
+import { Location, Review } from '../../types';
 import './Dashboard.css';
 
-const WebSocketClient = websocket.w3cwebsocket;
-const client = new WebSocketClient('ws://localhost:3030/', 'echo-protocol');
-
-const layout = {
-  labelCol: { span: 8 },
-  wrapperCol: { span: 16 },
+const reviewsGroupByDateComponent = (reviews: Review[], token: string) => {
+  const reviewsWeekNumbers = reviews.reduce<{ [key: string]: Review[]}>((acc, review) => {
+    const group = moment(review.createTime).utc().format(token);
+    return {
+      ...acc,
+      [group]: [
+        ...(acc[group] || []),
+        review,
+      ]
+    };
+  }, {});
+  return reviewsWeekNumbers;
 };
-const tailLayout = {
-  wrapperCol: { offset: 8, span: 16 },
-};
 
+const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Review[]}) => {
+  const weekNumbers = Object.keys(weeklyGroupedReviews);
+  if(!weekNumbers.length) return [];
+  const lastRecordedWeek = Number(weekNumbers[weekNumbers.length - 1]);
+  const firstRecordedWeek = Number(weekNumbers[0]);
+  const totalWeeks = lastRecordedWeek - firstRecordedWeek + 1;
+  return [...Array(totalWeeks).fill(0)].reduce<{ avg: number, diff: number }[]>((prevArray, _, index) => {
+    const thisWeekReviews = weeklyGroupedReviews[firstRecordedWeek + index];
+    const prevAvg = index ? prevArray[index - 1].avg : 0;
+    if(!thisWeekReviews) {
+      return index ? [
+        ...prevArray,
+        {
+          avg: prevAvg,
+          diff: 0,
+        },
+      ]: prevArray;
+    }
+
+    const avg = thisWeekReviews.reduce(
+      (sum, review) => (sum + Number(review.starRating)),
+      0
+    ) / thisWeekReviews.length;
+    console.log(avg, prevAvg);
+    return [
+      ...prevArray,
+      {
+        avg,
+        diff: avg - prevAvg,
+      },
+    ]
+  }, []);
+};
 
 const Dashboard: React.FC<RouteComponentProps> = ({
   history,
@@ -52,27 +88,11 @@ const Dashboard: React.FC<RouteComponentProps> = ({
           return totalRating / location.reviews.length;
         })(),
         ratingDynamics: (() => {
-          console.log(location);
-          const today = new Date();
-          const lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
-          const lastWeekReviews = location.reviews.filter(
-            (review) => new Date(review.createTime) >= lastWeek
-          );
-          const lastWeekAvg = lastWeekReviews.length ? lastWeekReviews.reduce(
-            (sum, review) => (sum + Number(review.starRating)),
-            0
-          ) / lastWeekReviews.length : 0; 
-          const preLastWeekReviews = location.reviews.filter(
-            (review) => new Date(review.createTime) < lastWeek
-          );
-          const preLastWeekAvg = preLastWeekReviews.length ? preLastWeekReviews.reduce(
-            (sum, review) => (sum + Number(review.starRating)),
-            0
-          ) / preLastWeekReviews.length : 0;
+          const reviewsGroupedByWeeks = reviewsGroupByDateComponent(location.reviews, 'W');
+          const reviewsWeekToAverageDiff = reviewsGetWeekToAverageDiff(reviewsGroupedByWeeks);
           return {
-            lastWeekReviews,
-            lastWeekAvg,
-            diff: lastWeekReviews.length ? lastWeekAvg - preLastWeekAvg : 0,
+            reviewsGroupedByWeeks,
+            reviewsWeekToAverageDiff,
           };
         })(),
       },
