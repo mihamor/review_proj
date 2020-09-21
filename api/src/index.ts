@@ -1,11 +1,16 @@
 import express from "express";
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+import * as http from 'http';
 import fetch from 'node-fetch';
+import websocker from 'websocket';
 
+import { registerSocket } from './socketConnection';
 import config from './config';
 
 const app = express();
+const server = http.createServer(app);
+registerSocket(server);
 
 console.log(config);
 
@@ -41,6 +46,6 @@ app.post('/watch-account', async (req, res) => {
 });
 
   
-app.listen(config.apiPort, () => {
+server.listen(config.apiPort, () => {
   console.log(`API listening at http://localhost:${config.apiPort}`)
 });
