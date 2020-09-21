@@ -1,10 +1,18 @@
 import websocket from 'websocket';
 
-import { RequestDataEvent } from './socketTypes';
+import {
+  RequestDataEvent,
+  SocketServerEvent,
+  DataEventType,
+  Location,
+} from '../types';
 
 const WebSocketClient = websocket.w3cwebsocket;
 
-export const registerSocketConnection = (accountId: string) => {
+export const registerSocketConnection = (
+  accountId: string,
+  onDataEvent: (data: Location[]) => void,
+) => {
   const client = new WebSocketClient('ws://localhost:3030/', 'echo-protocol');
   client.onerror = () => {
     console.log('Connection Error');
@@ -16,7 +24,7 @@ export const registerSocketConnection = (accountId: string) => {
       if (client.readyState === client.OPEN) {
         const requestDataEvent: RequestDataEvent = {
           type: 'requestData',
-          data: { accountId }
+          data: { accountId },
         };
         client.send(JSON.stringify(requestDataEvent));
       }
@@ -29,9 +37,16 @@ export const registerSocketConnection = (accountId: string) => {
   };
     
   client.onmessage = (e) => {
-    if (typeof e.data === 'string') {
-      
-      console.log("Received: '" + e.data + "'");
+    if (typeof e.data !== 'string') return;
+
+    const event: SocketServerEvent = JSON.parse(e.data);
+    switch (event.type) {
+      case DataEventType:
+        const locations = event.data;
+        onDataEvent(locations);
+        break;
+      default:
+        break;
     }
   };
   return client;

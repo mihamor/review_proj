@@ -25,7 +25,7 @@ const getLocationsWithReviews = async (accountId: number) => {
     review: reviews[index],
   }));
   return locationsWithReviews;
-}
+};
 
 const switchOnEventTypes = async (data: string, connection: websocket.connection) => {
   const event: SocketClientEvent = JSON.parse(data);
@@ -42,7 +42,6 @@ const switchOnEventTypes = async (data: string, connection: websocket.connection
     default:
       break;
   }
-  connection.sendUTF(data);
 };
 
 export const registerSocket = (server: Server) => {
