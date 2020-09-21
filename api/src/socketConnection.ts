@@ -22,7 +22,7 @@ const getLocationsWithReviews = async (accountId: number) => {
   const reviews = await Promise.all(promisesReviews);
   const locationsWithReviews = locations.map((location, index) => ({
     ...location,
-    review: reviews[index],
+    reviews: reviews[index],
   }));
   return locationsWithReviews;
 };
