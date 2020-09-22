@@ -23,6 +23,8 @@ services:
       - 3030:3030
     environment:
       API_PORT: 3030
+      SERVICE_URL: http://reviews-service:4030
+      SECRET: supersecret
       DATABASE_URL: postgres://postgres:@postgres:5432/reviews
   supersecretgoogleapi:
     build: ./supersecretgoogleapi
@@ -51,6 +53,7 @@ services:
     environment:
       SERVICE_PORT: 4030
       GOOGLE_API_URL: http://supersecretgoogleapi:5030
+      SECRET: supersecret
       DATABASE_URL: postgres://postgres:@postgres:5432/reviews
   web-app:
     image: "node:14-alpine"
