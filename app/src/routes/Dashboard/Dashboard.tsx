@@ -4,32 +4,125 @@ import React, {
   useMemo,
 } from 'react';
 import { RouteComponentProps, Redirect} from 'react-router-dom'
-import { MessageOutlined, StarOutlined } from '@ant-design/icons';
-import { List, Space } from 'antd';
-import { letterFrequency } from '@visx/mock-data';
-import { Group } from '@visx/group';
-import { Bar } from '@visx/shape';
-import { scaleLinear, scaleBand } from '@visx/scale';
+import { CalendarOutlined, HomeOutlined } from '@ant-design/icons';
+
+import { Table, Menu } from 'antd';
 
 import "antd/dist/antd.css";
 
 import { registerSocketConnection } from '../../socket/connection';
-import { Location } from '../../types';
+import { Location, Review, Reviewer, ReviewReply } from '../../types';
 import './Dashboard.css';
 import { calculateLocationsData } from './calculatedData';
 
-const IconText = ({ icon, text }: { icon: React.FC, text: string}) => (
-  <Space>
-    {React.createElement(icon)}
-    {text}
-  </Space>
-);
+const locationColumns = [
+  {
+    title: 'Name',
+    dataIndex: 'locationName',
+    key: 'name',
+    render: (text: string) => <a>{text}</a>,
+  },
+  {
+    title: 'Phone number',
+    dataIndex: 'primaryPhone',
+    key: 'phone',
+  },
+  {
+    title: 'Website',
+    dataIndex: 'websiteUrl',
+    key: 'websiteUrl',
+    render: (text: string) => <a href={text}>{text}</a>,
+  },
+  {
+    title: 'Total reviews',
+    dataIndex: 'reviews',
+    key: 'total_reviews',
+    render: (reviews: Review[]) => <a>{reviews.length}</a>
+  },
+  {
+    title: 'Average rating',
+    dataIndex: 'avgRating',
+    key: 'avgRating',
+  },
+  {
+    title: 'Last week diff',
+    dataIndex: 'ratingDynamics',
+    key: 'ratingDynamics',
+    render: ({ reviewsWeekToAverageDiff }: {
+      reviewsWeekToAverageDiff: {
+        diff: number;
+      }[],
+    }) => {
+      const lastWeekDynamics = reviewsWeekToAverageDiff[reviewsWeekToAverageDiff.length - 1];
+      if(!lastWeekDynamics) return 'No data';
+      const isPositive = lastWeekDynamics.diff >= 0;
+      return (
+        <span className={isPositive ? 'PositiveDiff' : 'NegativeDiff'}>
+          {`${isPositive ? '+' : '-'}${lastWeekDynamics.diff}`}
+        </span>
+      );
+    }
+  },
+];
+
+const reviewsColumns = [
+  {
+    title: 'Review id',
+    dataIndex: 'id',
+    key: 'id',
+    render: (id: number) => id.toString(),
+  },
+  {
+    title: 'Star rating',
+    dataIndex: 'starRating',
+    key: 'starRating',
+  },
+  {
+    title: 'Reviewer',
+    dataIndex: 'reviewer',
+    key: 'reviewer',
+    render: (reviewer: Reviewer) => reviewer.displayName,
+  },
+  {
+    title: 'Review reply',
+    dataIndex: 'reviewReply',
+    key: 'reviewReply',
+    render: (reviewReply: ReviewReply) => reviewReply.comment,
+  },
+  {
+    title: 'Comment',
+    dataIndex: 'comment',
+    key: 'comment',
+  },
+  // {
+  //   title: 'Last week diff',
+  //   dataIndex: 'ratingDynamics',
+  //   key: 'ratingDynamics',
+  //   render: ({ reviewsWeekToAverageDiff }: {
+  //     reviewsWeekToAverageDiff: {
+  //       diff: number;
+  //     }[],
+  //   }) => {
+  //     const lastWeekDynamics = reviewsWeekToAverageDiff[reviewsWeekToAverageDiff.length - 1];
+  //     if(!lastWeekDynamics) return 'No data';
+  //     const isPositive = lastWeekDynamics.diff >= 0;
+  //     return (
+  //       <span className={isPositive ? 'PositiveDiff' : 'NegativeDiff'}>
+  //         {`${isPositive ? '+' : '-'}${lastWeekDynamics.diff}`}
+  //       </span>
+  //     );
+  //   }
+  // },
+];
+
+
 
 const Dashboard: React.FC<RouteComponentProps> = ({
   history,
 }) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const accountId = localStorage.getItem('accountId');
+  const [activeTable, setActiveTable] = useState<string>('locations');
   useEffect(() => {
     if(accountId) {
       registerSocketConnection(
@@ -52,42 +145,35 @@ const Dashboard: React.FC<RouteComponentProps> = ({
   return (
     accountId ? (
       <div className="Dashboard">
-        <List
-          className="LocationList"
-          itemLayout="vertical"
-          size="large"
-          pagination={{
-            onChange: page => {
-              console.log(page);
-            },
-            pageSize: 3,
-          }}
-          dataSource={locations}
-          footer={
-            <div>
-              <b>ant design</b> footer part
-            </div>
-          }
-          renderItem={(item) => (
-            <List.Item
-              key={item.id}
-              actions={[
-                <IconText
-                  icon={StarOutlined} text={calculatedLocationsData[item.id].avgRating.toString()}
-                  key="list-vertical-star-o"
-                />,
-                <IconText icon={MessageOutlined} text={item.reviews.length.toString()} key="list-vertical-message" />,
-              ]}
-            >
-              <List.Item.Meta
-                title={<a>{item.locationName}</a>}
-                description={`Phone number: ${item.primaryPhone}`}
+        <Menu
+          onClick={(e) => setActiveTable(e.key.toString())}
+          selectedKeys={[activeTable]}
+          mode="horizontal"
+        >
+          <Menu.Item key="locations" icon={<HomeOutlined />}>
+            Locations
+          </Menu.Item>
+          <Menu.Item key="reviewsByWeek" icon={<CalendarOutlined />}>
+            Week Dynamics
+          </Menu.Item>
+        </Menu>
+        <Table
+          className='LocationTable'
+          columns={locationColumns}
+          dataSource={locations.map((location) => ({
+            ...calculatedLocationsData[location.id],
+            ...location,
+          }))}
+          expandable={{
+            expandedRowRender: (location) => (
+              <Table
+                columns={reviewsColumns}
+                dataSource={location.reviews} 
               />
-              {`Reviews in total: ${item.reviews.length}`}
-              {}
-            </List.Item>
-          )}
-        />,
+            ),
+            rowExpandable: (location) => (!!location.reviews.length),
+          }}      
+        />
       </div>
     )
     : <Redirect to='/' />

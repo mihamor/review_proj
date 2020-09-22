@@ -49,7 +49,7 @@ const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Revi
   }, []);
 };
 
-type LocationsData = {
+export type LocationsData = {
   [key: number] : {
     avgRating: number,
     ratingDynamics: {
