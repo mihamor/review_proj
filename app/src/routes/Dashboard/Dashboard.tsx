@@ -39,6 +39,15 @@ const locationColumns = [
     key: 'total_reviews',
     render: (reviews: Review[]) => <a>{reviews.length}</a>
   },
+];
+
+const locationDynamicsColumns = [
+  {
+    title: 'Name',
+    dataIndex: 'locationName',
+    key: 'name',
+    render: (text: string) => <a>{text}</a>,
+  },
   {
     title: 'Average rating',
     dataIndex: 'avgRating',
@@ -94,27 +103,29 @@ const reviewsColumns = [
     dataIndex: 'comment',
     key: 'comment',
   },
-  // {
-  //   title: 'Last week diff',
-  //   dataIndex: 'ratingDynamics',
-  //   key: 'ratingDynamics',
-  //   render: ({ reviewsWeekToAverageDiff }: {
-  //     reviewsWeekToAverageDiff: {
-  //       diff: number;
-  //     }[],
-  //   }) => {
-  //     const lastWeekDynamics = reviewsWeekToAverageDiff[reviewsWeekToAverageDiff.length - 1];
-  //     if(!lastWeekDynamics) return 'No data';
-  //     const isPositive = lastWeekDynamics.diff >= 0;
-  //     return (
-  //       <span className={isPositive ? 'PositiveDiff' : 'NegativeDiff'}>
-  //         {`${isPositive ? '+' : '-'}${lastWeekDynamics.diff}`}
-  //       </span>
-  //     );
-  //   }
-  // },
 ];
 
+
+const reviewsDynamicsColumns = [
+  {
+    title: 'Week average',
+    dataIndex: 'avg',
+    key: 'avg',
+  },
+  {
+    title: 'Week difference',
+    dataIndex: 'diff',
+    key: 'diff',
+    render: (diff: number) => {
+      const isPositive = diff >= 0;
+      return (
+        <span className={isPositive ? 'PositiveDiff' : 'NegativeDiff'}>
+          {`${isPositive ? '+' : '-'}${diff}`}
+        </span>
+      );
+    }
+  },
+];
 
 
 const Dashboard: React.FC<RouteComponentProps> = ({
@@ -157,26 +168,45 @@ const Dashboard: React.FC<RouteComponentProps> = ({
             Week Dynamics
           </Menu.Item>
         </Menu>
-        <Table
-          className='LocationTable'
-          columns={locationColumns}
-          dataSource={locations.map((location) => ({
-            ...calculatedLocationsData[location.id],
-            ...location,
-          }))}
-          expandable={{
-            expandedRowRender: (location) => (
-              <Table
-                columns={reviewsColumns}
-                dataSource={location.reviews} 
-              />
-            ),
-            rowExpandable: (location) => (!!location.reviews.length),
-          }}      
-        />
+        { activeTable === 'locations' ? (
+          <Table
+            className='LocationTable'
+            columns={locationColumns}
+            dataSource={locations.map((location) => ({
+              ...calculatedLocationsData[location.id],
+              ...location,
+            }))}
+            expandable={{
+              expandedRowRender: (location) => (
+                <Table
+                  columns={reviewsColumns}
+                  dataSource={location.reviews} 
+                />
+              ),
+              rowExpandable: (location) => (!!location.reviews.length),
+            }}      
+          />
+        ): (
+          <Table
+            className='LocationTable'
+            columns={locationDynamicsColumns}
+            dataSource={locations.map((location) => ({
+              ...calculatedLocationsData[location.id],
+              ...location,
+            }))}
+            expandable={{
+              expandedRowRender: (location) => (
+                <Table
+                  columns={reviewsDynamicsColumns}
+                  dataSource={location.ratingDynamics.reviewsWeekToAverageDiff} 
+                />
+              ),
+              rowExpandable: (location) => (!!location.reviews.length),
+            }}      
+          />
+        )}
       </div>
-    )
-    : <Redirect to='/' />
+    ) : <Redirect to='/' />
   );
 }
 
