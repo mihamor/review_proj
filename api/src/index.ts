@@ -2,11 +2,10 @@ import express from "express";
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import * as http from 'http';
-import fetch from 'node-fetch';
-import websocker from 'websocket';
 
 import { registerSocket } from './socketConnection';
 import config from './config';
+import { requestServiceAccountWatch } from "./helpers";
 
 const app = express();
 const server = http.createServer(app);
@@ -27,17 +26,8 @@ app.post('/watch-account', async (req, res) => {
   const { accountId } = req.body;
 
   try {
-    const response = await fetch(`${config.serviceUrl}/watch-account`, {
-      method: 'POST',
-      headers: {
-        ...(config.reviewsSecret ? { 'reviews-secret': config.reviewsSecret } : {}),
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ accountId }),
-    });
+    const response = await requestServiceAccountWatch(accountId);
     const responseJson = await response.json();
-
     res.json(responseJson);
   } catch(error) {
     console.error(error);

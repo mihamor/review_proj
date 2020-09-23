@@ -9,6 +9,7 @@ import {
   DataEvent,
   DataEventType,
 } from './types';
+import { requestServiceAccountWatch } from './helpers';
 
 const WebSocketServer = websocket.server;
 
@@ -32,6 +33,9 @@ const switchOnEventTypes = async (data: string, connection: websocket.connection
   switch (event.type) {
     case RequestDataEventType:
       const { accountId } = event.data;
+      const response = await requestServiceAccountWatch(accountId);
+      const responseJson = await response.json();
+      console.log(responseJson);
       const locations = await getLocationsWithReviews(Number(accountId));
       const dataEvent: DataEvent = {
         type: DataEventType,
