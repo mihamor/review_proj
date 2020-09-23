@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 
 import config from './config';
 import { generateTasks, recursiveFetchLocations } from './cronTasks';
+import { insertUpdate } from "./helpers";
 
 const app = express();
 
@@ -60,6 +61,8 @@ app.post('/watch-account', async (req, res) => {
     if(!locationsJobs.length) {
       return res.json([]);
     }
+    const locationsResults = await insertUpdate(pg, 'Locations', locations);
+    console.log(locationsResults);
     const locationsJobsResults = await pg('Locations_Jobs').insert(locationsJobs).returning('*');
     res.json(locationsJobsResults);
   } catch (error) {

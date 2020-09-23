@@ -1,7 +1,7 @@
 import knex from 'knex';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
-import _ from 'lodash';
+import { insertUpdate } from './helpers';
 
 import config from './config';
 import {
@@ -20,16 +20,6 @@ const pg = knex({
   connection: config.databaseUrl,
   searchPath: ['knex', 'public'],
 });
-
-
-const insertUpdate = (table: string, data: any[], pks: string[] = ['id']) => {
-	const firstData = data[0] ? data[0] : data;
-	const fields = _.difference(_.keys(firstData), pks);
-	const str = _.map(fields, (o) => {
-		return ('"%s" = excluded."%s"').replace(/%s/gi, o);
-	});
-	return pg.raw(pg(table).insert(data).toQuery() + " ON CONFLICT (id) DO UPDATE SET " + str.join(", ") + ' RETURNING *');
-}
 
 
 
@@ -162,11 +152,11 @@ export const generateTasks = async (numberToFire: number) => {
 
         if(reviewsToAdd.length) {
           const { replies, reviewers, reviews } = normalizeReviews(reviewsToAdd);
-          const reviewersResults = await insertUpdate('Reviewers', reviewers);
+          const reviewersResults = await insertUpdate(pg, 'Reviewers', reviewers);
           console.log(`Job id: ${id}: Succesfully added ${reviewersResults.length} reviewers`);
-          const repliesResults = await insertUpdate('ReviewReplies', replies);
+          const repliesResults = await insertUpdate(pg,'ReviewReplies', replies);
           console.log(`Job id: ${id}: Succesfully added ${repliesResults.length} reviewers`);
-          const addedReviewsResults = await insertUpdate('Reviews', reviews);
+          const addedReviewsResults = await insertUpdate(pg,'Reviews', reviews);
           console.log(`Job id: ${id}: Succesfully added ${addedReviewsResults.length} reviews`);
         }
       })
