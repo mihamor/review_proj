@@ -49,12 +49,31 @@ const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Revi
   }, []);
 };
 
+const reviewsGetWeekAverageGrouped = (weeklyGroupedReviews: { [key: string]: Review[]}) => {
+  return Object.keys(weeklyGroupedReviews).reduce<{ [key: string]: number }>((acc, key, index) => {
+    const thisWeekReviews = weeklyGroupedReviews[key];
+    if(!thisWeekReviews) return acc;
+    const avg = thisWeekReviews.reduce(
+      (sum, review) => (sum + Number(review.starRating)),
+      0
+    ) / thisWeekReviews.length;
+    console.log(avg);
+    return {
+      ...acc,
+      [key]: avg,
+    };
+  }, {});
+};
+
 export type LocationsData = {
   [key: number] : {
     avgRating: number,
     ratingDynamics: {
       reviewsGroupedByWeeks: {
         [key: string]: Review[];
+      },
+      reviewsWeekAverageGrouped: {
+        [key: string]: number,
       },
       reviewsWeekToAverageDiff: {
         avg: number;
@@ -64,7 +83,7 @@ export type LocationsData = {
   },
 };
 
-export const calculateLocationsData = (locations: Location[]): LocationsData => {
+export const calculateWeekDynamics = (locations: Location[]): LocationsData => {
   if(!locations) return {};
   console.log(locations);
   const locationsData = locations.reduce<LocationsData>((acc, location) => ({
@@ -81,9 +100,11 @@ export const calculateLocationsData = (locations: Location[]): LocationsData => 
       ratingDynamics: (() => {
         const reviewsGroupedByWeeks = reviewsGroupByDateComponent(location.reviews, 'W');
         const reviewsWeekToAverageDiff = reviewsGetWeekToAverageDiff(reviewsGroupedByWeeks);
+        const reviewsWeekAverageGrouped = reviewsGetWeekAverageGrouped(reviewsGroupedByWeeks);
         return {
           reviewsGroupedByWeeks,
           reviewsWeekToAverageDiff,
+          reviewsWeekAverageGrouped,
         };
       })(),
     },
@@ -91,3 +112,49 @@ export const calculateLocationsData = (locations: Location[]): LocationsData => 
   return locationsData;
 };
 
+const replaceInvalidWeekDataWithPrevious = (averages: number[]) => (
+  averages.reduce<number[]>((acc, value, index) => {
+    if (value === -1) {
+      return index ? [
+        ...acc,
+        acc[index - 1],
+      ] : [ ...acc, 0];
+    }
+    return [
+      ...acc,
+      value,
+    ];
+  }, [])
+);
+
+export const calculateOverallAverageByWeeks = (locations: Location[]) => {
+  const locationsData = calculateWeekDynamics(locations);
+  const locationDataKeysWithReviews = Object.keys(locationsData).filter((key) => (
+    locationsData[Number(key)].ratingDynamics.reviewsWeekToAverageDiff.length
+  ));
+  const minLocationWeek = locationDataKeysWithReviews.reduce((min, key) => {
+    const locationData = locationsData[Number(key)];
+    const firstWeekOfReviews = Number(Object.keys(locationData.ratingDynamics.reviewsGroupedByWeeks)[0]);
+    return min === -1  || firstWeekOfReviews < min ? firstWeekOfReviews : min;
+  }, -1);
+  const maxLocationWeek = locationDataKeysWithReviews.reduce((max, key) => {
+    const locationData = locationsData[Number(key)];
+    const weekKeys = Object.keys(locationData.ratingDynamics.reviewsGroupedByWeeks);
+    const firstWeekOfReviews = Number(weekKeys[weekKeys.length - 1]);
+    return max === -1  || firstWeekOfReviews > max ? firstWeekOfReviews : max;
+  }, -1);
+  const totalWeeks = maxLocationWeek - minLocationWeek;
+  const weeksAverage = [...Array(totalWeeks).fill(0)].map((_, index) => {
+    const weekKey = minLocationWeek + index;
+    const { sum, numberOfAverage } = locationDataKeysWithReviews.reduce((data, key) => {
+      const weekAverage = locationsData[Number(key)].ratingDynamics.reviewsWeekAverageGrouped[weekKey];
+      return {
+        sum: data.sum + (weekAverage | 0),
+        numberOfAverage: weekAverage ? data.numberOfAverage + 1 : data.numberOfAverage,
+      };
+    }, { sum: 0, numberOfAverage: 0 });
+    return numberOfAverage ? sum / numberOfAverage : -1;
+  });
+
+  return replaceInvalidWeekDataWithPrevious(weeksAverage);
+}

@@ -8,6 +8,12 @@
   width: 80%;
 }
 
+.Graph {
+  width: 50%;
+  display: block;
+  margin: auto;
+}
+
 .PositiveDiff {
   color: green;
 }

@@ -5,7 +5,11 @@ import React, {
 } from 'react';
 import { RouteComponentProps, Redirect} from 'react-router-dom'
 import { CalendarOutlined, HomeOutlined } from '@ant-design/icons';
-
+import * as allCurves from '@visx/curve';
+import { Group } from '@visx/group';
+import { LinePath } from '@visx/shape';
+import { AxisBottom, AxisLeft } from '@visx/axis';
+import { scaleLinear } from '@visx/scale';
 import { Table, Menu } from 'antd';
 
 import "antd/dist/antd.css";
@@ -13,7 +17,7 @@ import "antd/dist/antd.css";
 import { registerSocketConnection } from '../../socket/connection';
 import { Location, Review, Reviewer, ReviewReply } from '../../types';
 import './Dashboard.css';
-import { calculateLocationsData } from './calculatedData';
+import { calculateWeekDynamics, calculateOverallAverageByWeeks } from './calculatedData';
 
 const locationColumns = [
   {
@@ -67,7 +71,7 @@ const locationDynamicsColumns = [
       const isPositive = lastWeekDynamics.diff >= 0;
       return (
         <span className={isPositive ? 'PositiveDiff' : 'NegativeDiff'}>
-          {`${isPositive ? '+' : '-'}${lastWeekDynamics.diff}`}
+          {`${isPositive ? '+' : ''}${lastWeekDynamics.diff}`}
         </span>
       );
     }
@@ -120,12 +124,13 @@ const reviewsDynamicsColumns = [
       const isPositive = diff >= 0;
       return (
         <span className={isPositive ? 'PositiveDiff' : 'NegativeDiff'}>
-          {`${isPositive ? '+' : '-'}${diff}`}
+          {`${isPositive ? '+' : ''}${diff}`}
         </span>
       );
     }
   },
 ];
+
 
 
 const Dashboard: React.FC<RouteComponentProps> = ({
@@ -143,15 +148,31 @@ const Dashboard: React.FC<RouteComponentProps> = ({
     };
   }, []);
 
-  const calculatedLocationsData = useMemo(() => (
-    calculateLocationsData(locations)
+  const weekDynamic = useMemo(() => (
+    calculateWeekDynamics(locations)
   ), [locations]);
 
+  const overallAverage = useMemo(() => (
+    calculateOverallAverageByWeeks(locations)
+    .map((rating, week) => ({ rating, week }))
+  ), [locations]);
 
   useEffect(() => {
-    console.log(calculatedLocationsData);
-  }, [calculatedLocationsData]);
+    console.log(weekDynamic);
+    console.log(overallAverage);
+  }, [weekDynamic, overallAverage]);
 
+  const yScale = scaleLinear<number>({
+    domain: [0, 6],
+    range: [300, 0],
+  });
+  const xScale = scaleLinear<number>({
+    domain: [0, Array.from(overallAverage.keys())[overallAverage.length - 1]],
+    range: [0, 500],
+  });
+
+  const getX = (d: { week: number }) => d.week;
+  const getY = (d: { rating: number }) => d.rating;
 
   return (
     accountId ? (
@@ -173,7 +194,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
             className='LocationTable'
             columns={locationColumns}
             dataSource={locations.map((location) => ({
-              ...calculatedLocationsData[location.id],
+              ...weekDynamic[location.id],
               ...location,
             }))}
             expandable={{
@@ -187,23 +208,72 @@ const Dashboard: React.FC<RouteComponentProps> = ({
             }}      
           />
         ): (
-          <Table
-            className='LocationTable'
-            columns={locationDynamicsColumns}
-            dataSource={locations.map((location) => ({
-              ...calculatedLocationsData[location.id],
-              ...location,
-            }))}
-            expandable={{
-              expandedRowRender: (location) => (
-                <Table
-                  columns={reviewsDynamicsColumns}
-                  dataSource={location.ratingDynamics.reviewsWeekToAverageDiff} 
+          <>
+            <svg className="Graph" height={400}>
+              <Group top={50} left={70}>
+                {overallAverage.map((d, j) => (
+                  <circle
+                    key={j}
+                    r={3}
+                    cx={xScale((getX(d)))}
+                    cy={yScale((getY(d)))}
+                    stroke="rgba(33,33,33,0.5)"
+                  />
+                ))}
+                <LinePath
+                  curve={allCurves.curveLinear}
+                  data={overallAverage}
+                  x={d => xScale((getX(d)))}
+                  y={d => yScale((getY(d)))}
+                  stroke="#333"
+                  strokeWidth={2}
+                  strokeOpacity={0.6}
                 />
-              ),
-              rowExpandable: (location) => (!!location.reviews.length),
-            }}      
-          />
+                <AxisLeft
+                  hideAxisLine
+                  hideTicks
+                  label="Average rating by all locations"
+                  scale={yScale}
+                  stroke="#333"
+                  tickStroke="#333"
+                  tickLabelProps={() => ({
+                    fill: '#333',
+                    fontSize: 11,
+                    textAnchor: 'end',
+                    dy: '0.33em',
+                  })}
+                />
+                <AxisBottom
+                  label="Weeks"
+                  scale={xScale}
+                  stroke="#333"
+                  tickStroke="#333"
+                  tickLabelProps={() => ({
+                    fill: "#333",
+                    fontSize: 11,
+                    textAnchor: 'middle',
+                  })}
+                />
+              </Group>
+            </svg>
+            <Table
+              className='LocationTable'
+              columns={locationDynamicsColumns}
+              dataSource={locations.map((location) => ({
+                ...weekDynamic[location.id],
+                ...location,
+              }))}
+              expandable={{
+                expandedRowRender: (location) => (
+                  <Table
+                    columns={reviewsDynamicsColumns}
+                    dataSource={location.ratingDynamics.reviewsWeekToAverageDiff} 
+                  />
+                ),
+                rowExpandable: (location) => (!!location.reviews.length),
+              }}      
+            />
+          </>
         )}
       </div>
     ) : <Redirect to='/' />
