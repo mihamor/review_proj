@@ -93,6 +93,7 @@ app.get('/locations', async (req, res) => {
     additionalCategories: normalizedLocation.additionalCategories,
     websiteUrl: normalizedLocation.websiteUrl,
     regularHours: {
+      id: normalizedLocation.regularHours,
       periods: normalizedTimePeriods.filter(
         (timePeriod) => timePeriod.bussinesHoursId === normalizedLocation.regularHours
       ),
