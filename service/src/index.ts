@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import config from './config';
 import { generateTasks, recursiveFetchLocations } from './cronTasks';
 import { insertUpdate } from "./helpers";
+import { TimePeriod } from "./types";
 
 const app = express();
 
@@ -61,7 +62,36 @@ app.post('/watch-account', async (req, res) => {
     if(!locationsJobs.length) {
       return res.json([]);
     }
-    const locationsResults = await insertUpdate(pg, 'Locations', locations);
+
+    console.log(locations);
+    const normalizedLocations = locations.map((location) => ({
+      ...location,
+      address: location.address.id,
+      regularHours: location.regularHours.id,
+      locationKey: location.locationKey.id,
+    }));
+
+    const businessHours = locations.map((location) => ({
+      id: location.regularHours.id,
+      createdAt: location.regularHours.createdAt,
+    }));
+    const timePeriods = locations.reduce<TimePeriod[]>((acc, location) => ([
+      ...acc,
+      ...location.regularHours.periods,
+    ]), []);
+    const locationKeys = locations.map((location) => location.locationKey);
+    const postalAddresses = locations.map((location) => location.address);
+
+    const businessHoursResults = await insertUpdate(pg, 'BusinessHours', businessHours);
+    console.log(businessHoursResults);
+    const timePeriodsResults = await insertUpdate(pg, 'TimePeriods', timePeriods);
+    console.log(timePeriodsResults);
+    const locationKeysResults = await insertUpdate(pg, 'LocationKey', locationKeys);
+    console.log(locationKeysResults);
+    const postalAddressesResults = await insertUpdate(pg, 'PostalAddress', postalAddresses);
+    console.log(postalAddressesResults);
+
+    const locationsResults = await insertUpdate(pg, 'Locations', normalizedLocations);
     console.log(locationsResults);
     const locationsJobsResults = await pg('Locations_Jobs').insert(locationsJobs).returning('*');
     res.json(locationsJobsResults);

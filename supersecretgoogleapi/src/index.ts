@@ -49,9 +49,9 @@ app.get('/locations', async (req, res) => {
     'Locations.languageCode as languageCode', 'regionCode', 'sublocality',
     'PostalAddress.createdAt as addressCreatedAt', 'PostalAddress.postalCode as postalCode',
     'locality', 'addressLines', 'recipients', 'organization',
-    'PostalAddress.languageCode as addressLanguageCode',
+    'PostalAddress.languageCode as addressLanguageCode', 'name',
     'PostalAddress.id as adressId', 'sortingCode', 'administrativeArea',
-    'storeCode', 'locationName', 'primaryPhone', 'additionalPhones',
+    'storeCode', 'locationName', 'primaryPhone', 'additionalPhones', 'primaryCategory',
     'address', 'additionalCategories', 'websiteUrl', 'regularHours',
     'specialHours', 'serviceArea', 'locationKey', 'labels', 'adWordsLocationExtensions',
     'latlng', 'openInfo', 'locationState', 'attributes', 'metadata',
@@ -94,6 +94,7 @@ app.get('/locations', async (req, res) => {
     websiteUrl: normalizedLocation.websiteUrl,
     regularHours: {
       id: normalizedLocation.regularHours,
+      createdAt: normalizedLocation.createdAt,
       periods: normalizedTimePeriods.filter(
         (timePeriod) => timePeriod.bussinesHoursId === normalizedLocation.regularHours
       ),
