@@ -40,32 +40,95 @@ app.get('/locations', async (req, res) => {
   }
 
   const perPage = 5;
-  const locations = await pg('Accounts_Locations').where({
+  const normalizedLocations = await pg('Accounts_Locations').where({
     accountId: accountId,
   }).join('Locations', 'Accounts_Locations.locationId', '=', 'Locations.id')
-  .select('id', 'createdAt', 'languageCode',
+  .join('PostalAddress', 'Locations.address', '=', 'PostalAddress.id')
+  .join('LocationKey', 'Locations.locationKey', '=', 'LocationKey.id')
+  .select('Locations.id as id', 'Locations.createdAt as createdAt',
+    'Locations.languageCode as languageCode', 'regionCode', 'sublocality',
+    'PostalAddress.createdAt as addressCreatedAt', 'PostalAddress.postalCode as postalCode',
+    'locality', 'addressLines', 'recipients', 'organization',
+    'PostalAddress.languageCode as addressLanguageCode',
+    'PostalAddress.id as adressId', 'sortingCode', 'administrativeArea',
     'storeCode', 'locationName', 'primaryPhone', 'additionalPhones',
     'address', 'additionalCategories', 'websiteUrl', 'regularHours',
     'specialHours', 'serviceArea', 'locationKey', 'labels', 'adWordsLocationExtensions',
     'latlng', 'openInfo', 'locationState', 'attributes', 'metadata',
-    'profile', 'relationshipData')
+    'profile', 'relationshipData', 'LocationKey.id as locationKeyId',
+    'LocationKey.createdAt as locationKeyCreatedAt', 'plusPageId', 'placeId',
+    'LocationKey.postalCode as locationKeyPostalCode', 'explicitNoPlaceId', 'requestId')
   .orderBy('createdAt', 'desc')
   .paginate({
     perPage,
     currentPage: page,
     isLengthAware: true,
   });
-  const uniqueLocationIds = Array.from(new Set(locations.data.map((item) => item.id)));
+  const normalizedTimePeriods = await pg('TimePeriods').select('*');
 
-  const { lastPage } = locations.pagination;
+  const locations = normalizedLocations.data.map((normalizedLocation) => ({
+    id: normalizedLocation.id,
+    createdAt: normalizedLocation.createdAt,
+    languageCode: normalizedLocation.languageCode,
+    name: normalizedLocation.name,
+    storeCode: normalizedLocation.storeCode,
+    locationName: normalizedLocation.locationName,
+    primaryPhone: normalizedLocation.primaryPhone,
+    additionalPhones: normalizedLocation.additionalPhones,
+    address: {
+      id: normalizedLocation.adressId,
+      createdAt: normalizedLocation.addressCreatedAt,
+      regionCode: normalizedLocation.regionCode,
+      languageCode: normalizedLocation.addressLanguageCode,
+      postalCode: normalizedLocation.postalCode,
+      sortingCode: normalizedLocation.sortingCode,
+      administrativeArea: normalizedLocation.administrativeArea,
+      locality: normalizedLocation.locality,
+      sublocality: normalizedLocation.sublocality,
+      addressLines: normalizedLocation.addressLines,
+      recipients: normalizedLocation.recipients,
+      organization: normalizedLocation.organization,
+    },
+    primaryCategory: normalizedLocation.primaryCategory,
+    additionalCategories: normalizedLocation.additionalCategories,
+    websiteUrl: normalizedLocation.websiteUrl,
+    regularHours: {
+      periods: normalizedTimePeriods.filter(
+        (timePeriod) => timePeriod.bussinesHoursId === normalizedLocation.regularHours
+      ),
+    },
+    specialHours: normalizedLocation.specialHours,
+    serviceArea: normalizedLocation.serviceArea,
+    locationKey: {
+      id: normalizedLocation.locationKeyId,
+      createdAt: normalizedLocation.locationKeyCreatedAt,
+      plusPageId: normalizedLocation.plusPageId,
+      placeId: normalizedLocation.placeId,
+      postalCode: normalizedLocation.locationKeyPostalCode,
+      explicitNoPlaceId: normalizedLocation.explicitNoPlaceId,
+      requestId: normalizedLocation.requestId,
+    },
+    labels: normalizedLocation.labels,
+    adWordsLocationExtensions: normalizedLocation.adWordsLocationExtensions,
+    latlng: normalizedLocation.latlng,
+    openInfo: normalizedLocation.openInfo,
+    locationState: normalizedLocation.locationState,
+    attributes: normalizedLocation.attributes,
+    metadata: normalizedLocation.metadata,
+    profile: normalizedLocation.profile,
+    relationshipData: normalizedLocation.relationshipData,
+  }));
+  const uniqueLocationIds = Array.from(new Set(locations.map((item) => item.id)));
+
+  const { lastPage } = normalizedLocations.pagination;
   return res.json({
     ...(
-      locations.data.length === perPage && lastPage !== page  ?
+      normalizedLocations.data.length === perPage && lastPage !== page  ?
       { nextPage: `/locations?page=${page + 1}` } :
       {}
     ),
     results: uniqueLocationIds.map((id) => (
-      locations.data.filter((location) => location.id === id)[0]
+      locations.filter((location) => location.id === id)[0]
     )),
   });
 });
