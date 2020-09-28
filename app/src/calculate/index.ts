@@ -1,4 +1,4 @@
-import { Location, Review } from "../../types";
+import { Location, Review } from "../types";
 import moment from "moment";
 
 const reviewsGroupByDateComponent = (reviews: Review[], token: string) => {

@@ -71,6 +71,11 @@ app.post('/watch-account', async (req, res) => {
       locationKey: location.locationKey.id,
     }));
 
+    const accountsLocations = locations.map((location) => ({
+      accountId,
+      locationId: location.id,
+    }));
+
     const businessHours = locations.map((location) => ({
       id: location.regularHours.id,
       createdAt: location.regularHours.createdAt,
@@ -93,6 +98,9 @@ app.post('/watch-account', async (req, res) => {
 
     const locationsResults = await insertUpdate(pg, 'Locations', normalizedLocations);
     console.log(locationsResults);
+    const accountsLocationsResults = await pg('Accounts_Locations').insert(accountsLocations).returning('*');
+    console.log(accountsLocationsResults);
+
     const locationsJobsResults = await pg('Locations_Jobs').insert(locationsJobs).returning('*');
     res.json(locationsJobsResults);
   } catch (error) {

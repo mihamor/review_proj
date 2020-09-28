@@ -8,5 +8,5 @@ export const insertUpdate = (pg: knex, table: string, data: any[], pks: string[]
 	const str = _.map(fields, (o) => {
 		return ('"%s" = excluded."%s"').replace(/%s/gi, o);
 	});
-	return pg.raw(pg(table).insert(data).toQuery() + " ON CONFLICT (id) DO UPDATE SET " + str.join(", ") + ' RETURNING *');
+	return pg.raw(pg(table).insert(data).toQuery() + ` ON CONFLICT ("${pks[0]}") DO UPDATE SET ` + str.join(", ") + ' RETURNING *');
 }
