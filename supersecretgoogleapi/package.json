@@ -10,8 +10,8 @@
     "dev": "nodemon -e ts --exec npm start",
     "build": "babel src -d dist",
     "migrate": "node-pg-migrate",
-    "fixtures:locations": "DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb babel-node -x \".ts\" src/fixtures/locations.ts 20",
-    "fixtures:reviews": "DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb babel-node -x \".ts\" src/fixtures/reviews.ts 20 2020-01-17T03:24:00 2020-07-16T03:24:00"
+    "fixtures:locations": "DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb babel-node -x \".ts\" src/fixtures/locations.ts",
+    "fixtures:reviews": "DATABASE_URL=postgres://googleapiuser:@localhost:5400/supersecretgoogleapidb babel-node -x \".ts\" src/fixtures/reviews.ts"
   },
   "dependencies": {
     "@types/express-rate-limit": "^5.1.0",

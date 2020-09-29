@@ -70,6 +70,7 @@ const generate = async () => {
     websiteUrl: faker.internet.url(),
     regularHours: regularHoursResults[index].id,
     locationKey: locationKeysResults[index].id,
+    latlng: `${faker.address.latitude()} ${faker.address.longitude()}`,
     labels: [],
   }));
 
