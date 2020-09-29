@@ -118,7 +118,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
 
   return (
     accountId ? (
-      <div className="Dashboard">
+      <div className="Reviews">
         <svg className="Graph" height={400}>
           <Group top={50} left={70}>
             {overallAverage.map((d, j) => (

@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 import { RouteComponentProps, Redirect} from 'react-router-dom'
 import { Table } from 'antd';
+import GoogleMapReact from 'google-map-react';
 
 import "antd/dist/antd.css";
 
@@ -12,6 +13,16 @@ import { registerSocketConnection } from '../../socket/connection';
 import { calculateWeekDynamics } from '../../calculate';
 import { Location, Review, Reviewer, ReviewReply } from '../../types';
 import './Dashboard.css';
+import config from '../../config';
+
+type MarkerProps = {
+  text: string,
+  lat: number,
+  lng: number,
+};
+
+const Marker: React.FC<MarkerProps> = ({ text }) => <div>{text}</div>;
+
 
 const locationColumns = [
   {
@@ -85,30 +96,70 @@ const Dashboard: React.FC<RouteComponentProps> = ({
     };
   }, []);
 
-  const weekDynamic = useMemo(() => (
-    calculateWeekDynamics(locations)
+  const locationsWithWeekDynamic = useMemo(() => {
+    const weekDynamic = calculateWeekDynamics(locations);
+    return locations.map((location) => ({
+      ...weekDynamic[location.id],
+      ...location,
+    }));
+  }, [locations]);
+
+  const locationsLatlng = useMemo(() => (
+    locations.map((location) => {
+      const latlng = location.latlng.split(' ');
+      return {
+        id: location.id,
+        lat: Number(latlng[0]),
+        lng: Number(latlng[1]),
+      };
+    })
   ), [locations]);
+  
+
+  const defaultCenter = {
+    lat: 59.95,
+    lng: 30.33
+  };
 
   return (
     accountId ? (
       <div className="Dashboard">
-        <Table
-          className='LocationTable'
-          columns={locationColumns}
-          dataSource={locations.map((location) => ({
-            ...weekDynamic[location.id],
-            ...location,
-          }))}
-          expandable={{
-            expandedRowRender: (location) => (
-              <Table
-                columns={reviewsColumns}
-                dataSource={location.reviews} 
-              />
-            ),
-            rowExpandable: (location) => (!!location.reviews.length),
-          }}      
+        <div className="LocationMap">
+          <GoogleMapReact
+            defaultCenter={locationsLatlng[0] || defaultCenter}
+            defaultZoom={11}
+            bootstrapURLKeys={{ key: config.googleApiKey }}
+          >
+            {locationsLatlng.map((latlng) => (
+                <Marker
+                  key={latlng.id}
+                  lat={latlng.lat}
+                  lng={latlng.lng}
+                  text="My Marker"
+                />
+              ))}
+          </GoogleMapReact>
+        </div>
+        <div className="LocationTable">
+          <Table
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            scroll={{ y: 400 }}
+            columns={locationColumns}
+            dataSource={locationsWithWeekDynamic}
+            expandable={{
+              expandedRowRender: (location) => (
+                <Table
+                  rowKey="id"
+                  size="small" 
+                  columns={reviewsColumns}
+                  dataSource={location.reviews} 
+                />
+              ),
+              rowExpandable: (location) => (!!location.reviews.length),
+            }}      
         />
+        </div>
       </div>
     ) : <Redirect to='/' />
   );
