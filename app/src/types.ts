@@ -42,7 +42,7 @@ export type Location = {
   locationKey: number,
   labels: string[],
   adWordsLocationExtensions: string | null,
-  latlng: string | null,
+  latlng: string,
   openInfo: string | null,
   locationState: string | null,
   attributes: string | null,
