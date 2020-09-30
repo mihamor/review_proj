@@ -17,3 +17,32 @@
   flex: 1;
   height: 500px;
 }
+
+.Marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 10px;
+  top: 10px;
+  border: 2px solid #f44336;
+  border-radius: 10px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.Hint {
+  position: absolute;
+  padding: 5px;
+  left: 27px;
+  top: 27px;
+  border-radius: 3px;
+  background-color: white;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.Marker:hover {
+  border: 2px solid #3f51b5;
+  color: #f44336;
+}

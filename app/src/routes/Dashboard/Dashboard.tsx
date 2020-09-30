@@ -21,8 +21,20 @@ type MarkerProps = {
   lng: number,
 };
 
-const Marker: React.FC<MarkerProps> = ({ text }) => <div>{text}</div>;
+const Marker: React.FC<MarkerProps> = ({ text }) => {
+  const [hovering, setHovering] = useState<boolean>(false);
 
+  return (
+    <>
+      {hovering ? <div className="Hint">{text}</div> : null}
+      <div
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        className="Marker"
+      />
+    </>
+  );
+};
 
 const locationColumns = [
   {
@@ -103,17 +115,6 @@ const Dashboard: React.FC<RouteComponentProps> = ({
       ...location,
     }));
   }, [locations]);
-
-  const locationsLatlng = useMemo(() => (
-    locations.map((location) => {
-      const latlng = location.latlng.split(' ');
-      return {
-        id: location.id,
-        lat: Number(latlng[0]),
-        lng: Number(latlng[1]),
-      };
-    })
-  ), [locations]);
   
 
   const defaultCenter = {
@@ -126,18 +127,21 @@ const Dashboard: React.FC<RouteComponentProps> = ({
       <div className="Dashboard">
         <div className="LocationMap">
           <GoogleMapReact
-            defaultCenter={locationsLatlng[0] || defaultCenter}
-            defaultZoom={11}
+            defaultCenter={defaultCenter}
+            defaultZoom={1}
             bootstrapURLKeys={{ key: config.googleApiKey }}
           >
-            {locationsLatlng.map((latlng) => (
+            {locations.map((location)=> {
+              const latlng = location.latlng.split(' ');
+              return (
                 <Marker
-                  key={latlng.id}
-                  lat={latlng.lat}
-                  lng={latlng.lng}
-                  text="My Marker"
+                  key={location.id}
+                  lat={Number(latlng[0])}
+                  lng={Number(latlng[1])}
+                  text={location.locationName}
                 />
-              ))}
+              );
+            })}
           </GoogleMapReact>
         </div>
         <div className="LocationTable">
