@@ -1,6 +1,6 @@
-.Dashboard {
+.LocationData {
   margin: auto;
-  margin-top: 100px;
+  margin-top: 10px;
   width: 90%;
   display: flex;
   flex-direction: row;
@@ -45,4 +45,26 @@
 .Marker:hover {
   border: 2px solid #3f51b5;
   color: #f44336;
+}
+
+.StatsContainer {
+  margin: auto;
+  width: 90%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.RatingStats {
+  border: 1px solid gainsboro;
+  border-radius: 3px;
+  text-align: center;
+  margin: 20px;
+  padding: 10px;
+}
+
+.StatsSection {
+  height: 140px;
+  display: flex;
+  justify-content: space-between;
 }
