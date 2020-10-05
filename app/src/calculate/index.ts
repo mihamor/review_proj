@@ -38,7 +38,6 @@ const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Revi
       (sum, review) => (sum + Number(review.starRating)),
       0
     ) / thisWeekReviews.length;
-    console.log(avg, prevAvg);
     return [
       ...prevArray,
       {
@@ -57,7 +56,6 @@ const reviewsGetWeekAverageGrouped = (weeklyGroupedReviews: { [key: string]: Rev
       (sum, review) => (sum + Number(review.starRating)),
       0
     ) / thisWeekReviews.length;
-    console.log(avg);
     return {
       ...acc,
       [key]: avg,
@@ -85,7 +83,6 @@ export type LocationsData = {
 
 export const calculateWeekDynamics = (locations: Location[]): LocationsData => {
   if(!locations) return {};
-  console.log(locations);
   const locationsData = locations.reduce<LocationsData>((acc, location) => ({
     ...acc,
     [location.id]: {

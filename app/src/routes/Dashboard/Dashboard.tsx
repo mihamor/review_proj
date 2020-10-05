@@ -4,7 +4,14 @@ import React, {
   useMemo,
 } from 'react';
 import { RouteComponentProps, Redirect} from 'react-router-dom'
-import { Table, Rate, Typography, Space, Divider } from 'antd';
+import {
+  Table,
+  Rate,
+  Progress,
+  Typography,
+  Space,
+  Divider,
+} from 'antd';
 
 import GoogleMapReact from 'google-map-react';
 
@@ -94,17 +101,19 @@ const Dashboard: React.FC<RouteComponentProps> = ({
     };
   }, []);
 
-  const locationsWithWeekDynamic = useMemo(() => {
+  const {
+    locationsWithWeekDynamic,
+    reviewsDynamics,
+    overallAverage,
+    nps,
+  } = useMemo(() => {
+    if (!locations || !locations.length) return { nps: 0 };
     const weekDynamic = calculateWeekDynamics(locations);
-    return locations.map((location) => ({
+    const locationsWithWeekDynamic = locations.map((location) => ({
       ...weekDynamic[location.id],
       ...location,
     }));
-  }, [locations]);
-
-  const reviewsDynamics = useMemo(() => {
-    if(!locationsWithWeekDynamic || !locationsWithWeekDynamic.length) return null;
-    return locationsWithWeekDynamic.reduce<{ total: number, lastWeek: number }>(
+    const reviewsDynamics = locationsWithWeekDynamic.reduce<{ total: number, lastWeek: number }>(
       (acc , location) => {
         const { reviewsGroupedByWeeks } = location.ratingDynamics;
         const total = acc.total + location.reviews.length;
@@ -112,16 +121,37 @@ const Dashboard: React.FC<RouteComponentProps> = ({
         const lastWeekKey = weekKeys[weekKeys.length - 1];
         const lastWeek = acc.lastWeek + lastWeekKey ? reviewsGroupedByWeeks[lastWeekKey].length : 0;
         return { total, lastWeek };
-      }, { total: 0, lastWeek: 0 })
-    }, [locationsWithWeekDynamic]);
+      }, { total: 0, lastWeek: 0 });
+      const byWeeks = calculateOverallAverageByWeeks(locations);
+      const allTime = byWeeks.reduce<number>((acc, rating) => (
+        acc + (rating / byWeeks.length)
+      ), 0);
+      const overallAverage = { byWeeks, allTime };
 
-  const overallAverage = useMemo(() => {
-    if(!locations || !locations.length) return null;
-    const byWeeks = calculateOverallAverageByWeeks(locations);
-    const allTime = byWeeks.reduce<number>((acc, rating) => (
-      acc + (rating / byWeeks.length)
-    ), 0);
-    return { byWeeks, allTime };
+      const { positiveReviews, negativeReviews } = locations.reduce<{
+        positiveReviews: number,
+        negativeReviews: number,
+      }>((acc, location) => {
+        const negativeLocationReviews = location.reviews.filter((review) => (
+          Number(review.starRating) <= 3
+        ));
+        const positiveLocationReviews = location.reviews.filter((review) => (
+          Number(review.starRating) >= 5
+        ));
+        return {
+          positiveReviews: positiveLocationReviews.length + acc.positiveReviews,
+          negativeReviews: negativeLocationReviews.length + acc.negativeReviews,
+        }
+      }, { positiveReviews: 0, negativeReviews: 0 });
+      
+      const nps = (positiveReviews - negativeReviews) /  reviewsDynamics.total * 100;
+
+      return {
+        locationsWithWeekDynamic,
+        reviewsDynamics,
+        overallAverage,
+        nps
+      };
   }, [locations]);
   
 
@@ -164,6 +194,25 @@ const Dashboard: React.FC<RouteComponentProps> = ({
                   <Text type="secondary">
                     {`Last 30 days: ${reviewsDynamics.lastWeek}`}
                   </Text>
+                </>
+              ) : <Text type="secondary">No data</Text>}
+            </Space>
+            <Divider style={{ height: '70px' }} type="vertical" />
+            <Space
+              align="center"
+              className="StatsSection"
+              direction="vertical"
+            >
+              <Title level={4}>NPS</Title>
+              {reviewsDynamics ? (
+                <>
+                  <Progress
+                    width={80}
+                    type="circle"
+                    status={nps <= 0 ? 'exception' : 'normal'}
+                    percent={Math.abs(nps)}
+                    format={() => `${Math.floor(nps)}`}
+                  />
                 </>
               ) : <Text type="secondary">No data</Text>}
             </Space>
