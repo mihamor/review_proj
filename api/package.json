@@ -12,19 +12,26 @@
     "migrate": "node-pg-migrate"
   },
   "dependencies": {
+    "@types/cors": "^2.8.7",
     "@types/express": "^4.17.8",
+    "@types/express-session": "^1.17.0",
     "@types/knex": "^0.16.1",
     "@types/morgan": "^1.9.1",
     "@types/node-fetch": "^2.5.7",
+    "@types/uuid": "^8.3.0",
     "@types/websocket": "^1.0.1",
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "google-auth-library": "^6.1.1",
     "knex": "^0.21.5",
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.1",
     "node-pg-migrate": "^5.6.0",
     "nodemon": "^2.0.4",
     "pg": "^8.3.3",
+    "uuid": "^8.3.1",
     "websocket": "^1.0.32"
   },
   "devDependencies": {

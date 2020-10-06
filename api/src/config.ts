@@ -5,6 +5,7 @@ const config = {
   databaseUrl: process.env.DATABASE_URL,
   serviceUrl: process.env.SERVICE_URL,
   reviewsSecret: process.env.SECRET,
+  clientId: process.env.CLIENT_ID,
 };
 
 console.log(config);
