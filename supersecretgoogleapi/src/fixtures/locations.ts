@@ -7,7 +7,7 @@ console.log(config);
 
 const count = (n: number) => [...Array(n)];
 
-const accountIds = [1, 2, 3];
+const accountIds = [1, 2, 3, 4, 5];
 
 const pg = knex({
   client: 'pg',
