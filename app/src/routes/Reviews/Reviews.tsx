@@ -167,6 +167,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
           </Group>
         </svg>
         <Table
+          rowKey={(review) => review.id}
           className='LocationTable'
           columns={locationDynamicsColumns}
           dataSource={locations.map((location) => ({
@@ -176,6 +177,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
           expandable={{
             expandedRowRender: (location) => (
               <Table
+              rowKey={(dynamics) => dynamics.id}
                 columns={reviewsDynamicsColumns}
                 dataSource={location.ratingDynamics.reviewsWeekToAverageDiff} 
               />

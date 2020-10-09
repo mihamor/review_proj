@@ -21,13 +21,18 @@ const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Revi
   const lastRecordedWeek = Number(weekNumbers[weekNumbers.length - 1]);
   const firstRecordedWeek = Number(weekNumbers[0]);
   const totalWeeks = lastRecordedWeek - firstRecordedWeek + 1;
-  return [...Array(totalWeeks).fill(0)].reduce<{ avg: number, diff: number }[]>((prevArray, _, index) => {
+  return [...Array(totalWeeks).fill(0)].reduce<{
+    avg: number,
+    diff: number,
+    id: number,
+  }[]>((prevArray, _, index) => {
     const thisWeekReviews = weeklyGroupedReviews[firstRecordedWeek + index];
     const prevAvg = index ? prevArray[index - 1].avg : 0;
     if(!thisWeekReviews) {
       return index ? [
         ...prevArray,
         {
+          id: index,
           avg: prevAvg,
           diff: 0,
         },
@@ -41,6 +46,7 @@ const reviewsGetWeekToAverageDiff = (weeklyGroupedReviews: { [key: string]: Revi
     return [
       ...prevArray,
       {
+        id: index,
         avg,
         diff: avg - prevAvg,
       },
@@ -74,6 +80,7 @@ export type LocationsData = {
         [key: string]: number,
       },
       reviewsWeekToAverageDiff: {
+        id: number,
         avg: number;
         diff: number;
       }[],

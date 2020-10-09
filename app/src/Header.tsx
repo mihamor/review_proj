@@ -37,13 +37,23 @@ const Header: React.FC<RouteComponentProps>  = ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ tokenObj }),
+          credentials: 'include',
         });
         const userData = await response.json();
-        console.log(userData);
+        console.log(response);
         setUserData(userData);
       } catch(err) {
         console.log(err);
       }
+      const response = await fetch(`http://localhost:3030/check_session`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      const session = await response.json();
+      console.log('session', session);
     }
   };  
 

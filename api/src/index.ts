@@ -1,8 +1,9 @@
 import express from "express";
 import morgan from 'morgan';
-import bodyParser from 'body-parser';
+import bodyParser, { json } from 'body-parser';
 import * as http from 'http';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import { v4 as uuidv4 } from 'uuid';
 import { OAuth2Client } from 'google-auth-library';
 import cors from 'cors';
@@ -19,16 +20,29 @@ registerSocket(server);
 
 console.log(config);
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:8080',
+    'https://localhost:8080'
+  ],
+  credentials: true,
+  exposedHeaders: ['set-cookie']
+}));
 app.use(morgan('combined'));
 app.use(bodyParser.json());
+
+app.use(cookieParser());
 
 app.use(session({
   secret: 'secret',
   resave: false,
   unset: 'destroy',
-  name: 'session cookie name',
+  name: 'session',
   saveUninitialized: false,
+  cookie: {
+    maxAge: 600000,
+    secure: true,
+  },
   genid: (req) => (
     uuidv4()
   ),
@@ -60,11 +74,14 @@ app.post('/login_google', async (req, res) => {
     const userData = await verifyAccessToken(tokenObj.id_token);
     if (!userData) throw new Error('Can\'t verify token');
     req.session.user = userData;
+    console.log(req.session);
+    res.cookie('session', JSON.stringify(userData));
     res.status(200).json({ userData });
   } catch(err) {
     res.status(403).json({ error: `Invalid access token. Error: ${err.message}` });
   }
 });
+
 
 app.post('/logout', async (req, res) => {
   try {
@@ -76,6 +93,10 @@ app.post('/logout', async (req, res) => {
   }
 });
 
+app.get('/check_session', async (req, res) => {
+  console.log(req.session);
+  res.json({ session: req.session });
+});
 
 app.post('/watch-account', async (req, res) => {
   const { accountId } = req.body;

@@ -11,6 +11,7 @@ import {
   Typography,
   Space,
   Divider,
+  Spin,
 } from 'antd';
 
 import GoogleMapReact from 'google-map-react';
@@ -92,6 +93,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
   const [locations, setLocations] = useState<Location[]>([]);
   const accountId = localStorage.getItem('accountId');
 
+
   useEffect(() => {
     if(accountId) {
       registerSocketConnection(
@@ -143,7 +145,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
           negativeReviews: negativeLocationReviews.length + acc.negativeReviews,
         }
       }, { positiveReviews: 0, negativeReviews: 0 });
-      
+
       const nps = (positiveReviews - negativeReviews) /  reviewsDynamics.total * 100;
 
       return {
@@ -165,57 +167,69 @@ const Dashboard: React.FC<RouteComponentProps> = ({
       <div>
         <div className="StatsContainer">
           <Space className="RatingStats" direction="horizontal">
-            <Space
-              align="center"
-              className="StatsSection"
-              direction="vertical"
-            >
-              <Title level={4}>Overall rating</Title>
-              {overallAverage ? (
-                <>
-                  <Rate allowHalf defaultValue={overallAverage.allTime} />
-                  <Text type="secondary">{`${overallAverage.allTime.toFixed(2)}/5`}</Text>
-                  <Text type="secondary">
-                    {`Last 30 days: ${overallAverage.byWeeks[overallAverage.byWeeks.length - 1].toFixed(2)}/5`}
-                  </Text>
-                </>
-              ) : <Text type="secondary">No data</Text>}
+          {!overallAverage?.byWeeks.length ? (
+            <Space direction="vertical">
+              <Text>Reviews fetch can take up to 5 minutes...</Text>
+              <Spin />
             </Space>
-            <Divider style={{ height: '70px' }} type="vertical" />
-            <Space
-              align="center"
-              className="StatsSection"
-              direction="vertical"
-            >
-              <Title level={4}>Reviews</Title>
-              {reviewsDynamics ? (
-                <>
-                  <Title level={5} type="secondary">{`Total: ${reviewsDynamics.total}`}</Title>
-                  <Text type="secondary">
-                    {`Last 30 days: ${reviewsDynamics.lastWeek}`}
-                  </Text>
-                </>
-              ) : <Text type="secondary">No data</Text>}
-            </Space>
-            <Divider style={{ height: '70px' }} type="vertical" />
-            <Space
-              align="center"
-              className="StatsSection"
-              direction="vertical"
-            >
-              <Title level={4}>NPS</Title>
-              {reviewsDynamics ? (
-                <>
-                  <Progress
-                    width={80}
-                    type="circle"
-                    status={nps <= 0 ? 'exception' : 'normal'}
-                    percent={Math.abs(nps)}
-                    format={() => `${Math.floor(nps)}`}
-                  />
-                </>
-              ) : <Text type="secondary">No data</Text>}
-            </Space>
+            ) : (
+            <>
+              <Space
+                align="center"
+                className="StatsSection"
+                direction="vertical"
+              >
+                <Title level={4}>Overall rating</Title>
+                {overallAverage ? (
+                  <>
+                    <Rate allowHalf defaultValue={overallAverage.allTime} />
+                    <Text type="secondary">{`${overallAverage.allTime.toFixed(2)}/5`}</Text>
+                    <Text type="secondary">
+                      {`Last 30 days: ${
+                        overallAverage.byWeeks.length ? 
+                        `${overallAverage.byWeeks[overallAverage.byWeeks.length - 1].toFixed(2)}/5`
+                        : 'No data'
+                      }`}
+                    </Text>
+                  </>
+                ) : <Text type="secondary">No data</Text>}
+              </Space>
+              <Divider style={{ height: '70px' }} type="vertical" />
+              <Space
+                align="center"
+                className="StatsSection"
+                direction="vertical"
+              >
+                <Title level={4}>Reviews</Title>
+                {reviewsDynamics ? (
+                  <>
+                    <Title level={5} type="secondary">{`Total: ${reviewsDynamics.total}`}</Title>
+                    <Text type="secondary">
+                      {`Last 30 days: ${reviewsDynamics.lastWeek}`}
+                    </Text>
+                  </>
+                ) : <Text type="secondary">No data</Text>}
+              </Space>
+              <Divider style={{ height: '70px' }} type="vertical" />
+              <Space
+                align="center"
+                className="StatsSection"
+                direction="vertical"
+              >
+                <Title level={4}>NPS</Title>
+                {reviewsDynamics ? (
+                  <>
+                    <Progress
+                      width={80}
+                      type="circle"
+                      status={nps <= 0 ? 'exception' : 'normal'}
+                      percent={Math.abs(nps)}
+                      format={() => `${Math.floor(nps)}`}
+                    />
+                  </>
+                ) : <Text type="secondary">No data</Text>}
+              </Space>
+            </>)}
           </Space>
         </div>
         <div className="LocationData">
