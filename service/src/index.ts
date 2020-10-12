@@ -37,6 +37,28 @@ app.get('/', (req, res) => {
   });
 });
 
+app.post('/unwatch-account', async (req, res) => {
+  const { accountId: accountIdStr } = req.body;
+  const accountId = Number(accountIdStr);
+  if (!accountId) {
+    return res.status(400).json({
+      error: 'Invalid account id',
+    });
+  }
+
+  const accountsLocationsResults = await pg('Accounts_Locations')
+  .join('Locations_Jobs', 'Accounts_Locations.locationId', '=', 'Locations_Jobs.locationId')
+  .where({ accountId })
+  .select('id')
+  .returning('*');
+
+  const deleteJobsResults = await pg('Locations_Jobs')
+  .delete(accountsLocationsResults)
+  .returning('*');
+
+  console.log(accountId);
+  res.json({ deleteJobsResults });
+});
 
 app.post('/watch-account', async (req, res) => {
   const reviewsSecret = req.headers['reviews-secret'];
