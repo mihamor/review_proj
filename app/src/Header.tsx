@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Menu } from "antd";
-import { CalendarOutlined, HomeOutlined, GoogleOutlined } from '@ant-design/icons';
+import {
+  CalendarOutlined,
+  HomeOutlined,
+  GoogleOutlined,
+  UserSwitchOutlined,
+} from '@ant-design/icons';
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import GoogleLogin, {
   GoogleLoginResponse,
@@ -16,6 +21,7 @@ type UserData = {
 const Header: React.FC<RouteComponentProps>  = ({
   history,
 }) => {
+  const accountId = localStorage.getItem('accountId');
   const [activeRoute, setActiveRoute] = useState<string>('/dashboard');
   const [userData, setUserData] = useState<UserData | null>(null);
   console.log(userData);
@@ -55,13 +61,34 @@ const Header: React.FC<RouteComponentProps>  = ({
       const session = await response.json();
       console.log('session', session);
     }
-  };  
+  }; 
+  
+  const unwatchAccount = async () => {
+    try {
+      const response = await fetch(`http://localhost:3030/unwatch-account`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ accountId }),
+      });
+      const unwatchedData = await response.json();
+      console.log(unwatchedData);
+      localStorage.removeItem('accountId');
+      history.push('/login');
+    } catch (error) {
+      console.log(error);
+    }  
+  }
 
   return (
     <Menu
       onClick={(e) => {
         const key = e.key.toString();
-        if(key === '/google_login') return;
+        if(key === '/google_login'
+        || key === '/change_account') return;
         setActiveRoute(key);
       }}
       selectedKeys={[activeRoute]}
@@ -94,7 +121,6 @@ const Header: React.FC<RouteComponentProps>  = ({
         </Menu.Item>
         ) : (
           <Menu.Item
-            onClick={() => setUserData(null)}
             key="/google_login"
             icon={<GoogleOutlined />}
           >
@@ -106,6 +132,19 @@ const Header: React.FC<RouteComponentProps>  = ({
             </button>
           </Menu.Item>
         )}
+        { accountId ? (
+          <Menu.Item
+            key="/change_account"
+            icon={<UserSwitchOutlined />}
+          >
+            <button
+              className="TextButton"
+              onClick={unwatchAccount}
+            >
+              Change account
+            </button>
+          </Menu.Item>
+        ) : null}
     </Menu>
   );
 };

@@ -57,7 +57,7 @@ app.post('/unwatch-account', async (req, res) => {
   .returning('*');
 
   console.log(accountId);
-  res.json({ deleteJobsResults });
+  res.json(deleteJobsResults);
 });
 
 app.post('/watch-account', async (req, res) => {

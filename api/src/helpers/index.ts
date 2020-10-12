@@ -13,3 +13,16 @@ export const requestServiceAccountWatch  = (accountId: string) => (
     body: JSON.stringify({ accountId }),
   })
 );
+
+export const requestServiceAccountUnwatch  = (accountId: string) => (
+  fetch(`${config.serviceUrl}/unwatch-account`, {
+    method: 'POST',
+    headers: {
+      ...(config.reviewsSecret ? { 'reviews-secret': config.reviewsSecret } : {}),
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ accountId }),
+  })
+);
+

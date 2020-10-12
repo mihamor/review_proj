@@ -10,7 +10,10 @@ import cors from 'cors';
 
 import { registerSocket } from './socketConnection';
 import config from './config';
-import { requestServiceAccountWatch } from "./helpers";
+import {
+  requestServiceAccountWatch,
+  requestServiceAccountUnwatch,
+} from "./helpers";
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +36,8 @@ app.use(bodyParser.json());
 
 app.use(cookieParser());
 
+
+const cookieAge = 600000;
 app.use(session({
   secret: 'secret',
   resave: false,
@@ -40,7 +45,7 @@ app.use(session({
   name: 'session',
   saveUninitialized: false,
   cookie: {
-    maxAge: 600000,
+    maxAge: cookieAge,
     secure: true,
   },
   genid: (req) => (
@@ -75,6 +80,13 @@ app.post('/login_google', async (req, res) => {
     if (!userData) throw new Error('Can\'t verify token');
     req.session.user = userData;
     console.log(req.session);
+    setTimeout(async () => {
+      try {
+        await requestServiceAccountUnwatch(userData.id);
+      } catch (error) {
+        console.error(error); 
+      }
+    }, cookieAge);
     res.cookie('session', JSON.stringify(userData));
     res.status(200).json({ userData });
   } catch(err) {
@@ -103,6 +115,19 @@ app.post('/watch-account', async (req, res) => {
 
   try {
     const response = await requestServiceAccountWatch(accountId);
+    const responseJson = await response.json();
+    res.json(responseJson);
+  } catch(error) {
+    console.error(error);
+    res.status(400).send({ error: error.message });
+  }
+});
+
+app.post('/unwatch-account', async (req, res) => {
+  const { accountId } = req.body;
+
+  try {
+    const response = await requestServiceAccountUnwatch(accountId);
     const responseJson = await response.json();
     res.json(responseJson);
   } catch(error) {

@@ -21,6 +21,7 @@ const App = () => {
         <Switch>
           <Route path="/reviews" component={Reviews} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/login" component={Home} />
           <Route exact path="/" render={(props) => (
               loggedIn ? <Redirect to="/dashboard" /> : <Home {...props} />
             )}
