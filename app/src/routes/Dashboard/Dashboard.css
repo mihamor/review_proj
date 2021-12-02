@@ -49,13 +49,17 @@
 
 .StatsContainer {
   margin: auto;
-  width: 90%;
+  width: 80%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
 }
 
+
 .RatingStats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid gainsboro;
   border-radius: 3px;
   text-align: center;

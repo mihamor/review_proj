@@ -37,11 +37,11 @@ const Home: React.FC<RouteComponentProps> = ({
         onFinishFailed={onFinishFailed}
       >
         <Form.Item
-          label="Account ID"
+          label="Your app id"
           name="accountId"
           rules={[{
             required: true,
-            message: 'Please input your account id.',
+            message: 'Please input your app id.',
           }]}
         >
           <Input />
@@ -51,7 +51,7 @@ const Home: React.FC<RouteComponentProps> = ({
             type="primary"
             htmlType="submit"
           >
-            Submit
+            Analyze
           </Button>
         </Form.Item>
       </Form>

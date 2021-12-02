@@ -33,6 +33,9 @@ app.get('/locations', async (req, res) => {
   const page = Number(req.query.page) || 1;
   const accountId = req.headers['account-id'];
 
+
+  console.log('accountId', accountId);
+
   if(!accountId) {
     return res.status(400).json({
       error: 'No account id provided',
@@ -123,6 +126,8 @@ app.get('/locations', async (req, res) => {
   const uniqueLocationIds = Array.from(new Set(locations.map((item) => item.id)));
 
   const { lastPage } = normalizedLocations.pagination;
+
+  console.log('normalizedLocations.data.length', normalizedLocations.data.length);
   return res.json({
     ...(
       normalizedLocations.data.length === perPage && lastPage !== page  ?

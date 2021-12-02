@@ -20,12 +20,12 @@ import './Reviews.css';
 
 
 const locationDynamicsColumns = [
-  {
-    title: 'Name',
-    dataIndex: 'locationName',
-    key: 'name',
-    render: (text: string) => <a>{text}</a>,
-  },
+  // {
+  //   title: 'Name',
+  //   dataIndex: 'locationName',
+  //   key: 'name',
+  //   render: (text: string) => <a>{text}</a>,
+  // },
   {
     title: 'Average rating',
     dataIndex: 'avgRating',
@@ -79,7 +79,8 @@ const Dashboard: React.FC<RouteComponentProps> = ({
   history,
 }) => {
   const [locations, setLocations] = useState<Location[]>([]);
-  const accountId = localStorage.getItem('accountId');
+  //const accountId = localStorage.getItem('accountId');
+  const accountId = '1';
 
   useEffect(() => {
     if(accountId) {
@@ -142,7 +143,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
             <AxisLeft
               hideAxisLine
               hideTicks
-              label="Average rating by all locations"
+              label="Average rating by all reviews"
               scale={yScale}
               stroke="#333"
               tickStroke="#333"

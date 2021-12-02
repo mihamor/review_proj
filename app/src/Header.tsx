@@ -100,7 +100,7 @@ const Header: React.FC<RouteComponentProps>  = ({
       <Menu.Item key="/reviews" icon={<CalendarOutlined />}>
         Reviews
       </Menu.Item>
-      {!userData ? (
+      {/* {!userData ? (
         <Menu.Item key="/google_login" icon={<GoogleOutlined />}>
           <GoogleLogin
             render={renderProps => (
@@ -131,7 +131,7 @@ const Header: React.FC<RouteComponentProps>  = ({
               Logout
             </button>
           </Menu.Item>
-        )}
+        )} */}
         { accountId ? (
           <Menu.Item
             key="/change_account"
@@ -141,7 +141,7 @@ const Header: React.FC<RouteComponentProps>  = ({
               className="TextButton"
               onClick={unwatchAccount}
             >
-              Change account
+              Change application
             </button>
           </Menu.Item>
         ) : null}

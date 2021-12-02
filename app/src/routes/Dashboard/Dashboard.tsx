@@ -16,6 +16,8 @@ import {
 
 import GoogleMapReact from 'google-map-react';
 
+import fetchJsonP from 'fetch-jsonp';
+
 import "antd/dist/antd.css";
 
 import { registerSocketConnection } from '../../socket/connection';
@@ -32,28 +34,42 @@ const { Text, Title } = Typography;
 
 const locationColumns = [
   {
-    title: 'Name',
-    dataIndex: 'locationName',
-    key: 'name',
-    render: (text: string) => <a>{text}</a>,
+    title: 'Author',
+    dataIndex: 'author',
+    key: 'author',
+    render: (author: { name: { label: string; }; }) => <a href={author.uri.label}>{author.name.label}</a>,
   },
   {
-    title: 'Phone number',
-    dataIndex: 'primaryPhone',
-    key: 'phone',
+    title: 'Title',
+    dataIndex: 'title',
+    key: 'title',
+    render: (title: { label: string; }) => <span>{title.label}</span>,
   },
   {
-    title: 'Website',
-    dataIndex: 'websiteUrl',
-    key: 'websiteUrl',
-    render: (text: string) => <a href={text}>{text}</a>,
+    title: 'Content',
+    dataIndex: 'content',
+    key: 'content',
+    render: (content: { label: string; }) => <span>{content.label}</span>,
   },
+
   {
-    title: 'Total reviews',
-    dataIndex: 'reviews',
-    key: 'total_reviews',
-    render: (reviews: Review[]) => <a>{reviews.length}</a>
+    title: 'Rating',
+    dataIndex: 'im:rating',
+    key: 'rating',
+    render: (rating: { label: string; }) => <Rate allowHalf defaultValue={Number(rating.label)} />
   },
+  // {
+  //   title: 'Website',
+  //   dataIndex: 'websiteUrl',
+  //   key: 'websiteUrl',
+  //   render: (text: string) => <a href={text}>{text}</a>,
+  // },
+  // {
+  //   title: 'Total reviews',
+  //   dataIndex: 'reviews',
+  //   key: 'total_reviews',
+  //   render: (reviews: Review[]) => <a>{reviews.length}</a>
+  // },
 ];
 
 const reviewsColumns = [
@@ -87,11 +103,28 @@ const reviewsColumns = [
   },
 ];
 
+function mode(arr: any[]){
+  return arr.sort((a,b) =>
+        arr.filter(v => v===a).length
+      - arr.filter(v => v===b).length
+  ).pop();
+}
+
+
+const possibleTopics = ['Common', 'Bugs', 'Propositions'];
+const possibleSentiments = ['Negative', 'Neutral', 'Positive'];
 const Dashboard: React.FC<RouteComponentProps> = ({
   history,
 }) => {
   const [locations, setLocations] = useState<Location[]>([]);
-  const accountId = localStorage.getItem('accountId');
+  const appId = localStorage.getItem('accountId');
+  //1053012308
+  const accountId  = '1';
+  const [loadingReviews, setLoadingReviews] = useState<boolean>(true);
+  const [loadingApp, setLoadingApp] = useState<boolean>(true);
+
+  const [appReviews, setAppReviews] = useState([]);
+  const [app, setApp] = useState();
 
 
   useEffect(() => {
@@ -103,11 +136,33 @@ const Dashboard: React.FC<RouteComponentProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+
+    const fetchReviews = () => fetch(`https://itunes.apple.com/us/rss/customerreviews/id=${appId}/sortBy=mostRecent/json`)
+      .then((res) => res.json())
+      .then((res) => setAppReviews(res.feed.entry))
+      .then(() => setLoadingReviews(false));
+
+    const fetchApp = () => fetchJsonP(`https://itunes.apple.com/lookup?id=${appId}`)
+      .then((res) => res.json())
+      .then((res) => setApp(res.results[0]))
+      .then(() => setLoadingApp(false));
+
+    fetchApp();
+    fetchReviews();
+
+  }, []);
+
+  console.log(app);
+  console.log
+
   const {
     locationsWithWeekDynamic,
     reviewsDynamics,
     overallAverage,
     nps,
+    popularSentiment,
+    popularTopic,
   } = useMemo(() => {
     if (!locations || !locations.length) return { nps: 0 };
     const weekDynamic = calculateWeekDynamics(locations);
@@ -115,6 +170,15 @@ const Dashboard: React.FC<RouteComponentProps> = ({
       ...weekDynamic[location.id],
       ...location,
     }));
+    const reviewsFlat = locations.reduce<Review[]>((acc, loc) => [...acc, ...loc.reviews], []);
+    const reviewsWithTopicsAndSentiment = reviewsFlat.map((review) => ({
+      ...review,
+      sentiment: possibleSentiments[Math.floor(Math.random() * possibleSentiments.length)],
+      topic: possibleTopics[Math.floor(Math.random() * possibleTopics.length)],
+    }));
+
+    const popularSentiment = mode(reviewsWithTopicsAndSentiment.map(({ sentiment }) => sentiment));
+    const popularTopic = mode(reviewsWithTopicsAndSentiment.map(({ topic }) => topic));
     const reviewsDynamics = locationsWithWeekDynamic.reduce<{ total: number, lastWeek: number }>(
       (acc , location) => {
         const { reviewsGroupedByWeeks } = location.ratingDynamics;
@@ -152,7 +216,10 @@ const Dashboard: React.FC<RouteComponentProps> = ({
         locationsWithWeekDynamic,
         reviewsDynamics,
         overallAverage,
-        nps
+        nps,
+        reviewsWithTopicsAndSentiment,
+        popularSentiment,
+        popularTopic,
       };
   }, [locations]);
   
@@ -162,12 +229,31 @@ const Dashboard: React.FC<RouteComponentProps> = ({
     lng: 30.33
   };
 
+  console.log(app);
+  console.log(appReviews);
+
   return (
-    accountId ? (
+    appId ? (
       <div>
         <div className="StatsContainer">
           <Space className="RatingStats" direction="horizontal">
-          {!overallAverage?.byWeeks.length ? (
+          {!loadingReviews && !loadingApp && (<Space
+              align="center"
+              className="StatsSection"
+              direction="vertical"
+            >
+              <Title level={4}>{app?.trackName}</Title>
+              <Title level={5} type="secondary">{(app?.description as string).slice(0, 35) + '...'}</Title>
+              {overallAverage ? (
+                  <>
+                    <Rate allowHalf defaultValue={app?.averageUserRating} />
+                    <Text type="secondary">{`${(app?.averageUserRating).toFixed(2)}/5`}</Text>
+                  </>
+                ) : <Text type="secondary">No data about average</Text>}
+            </Space>)}
+          </Space>
+          <Space className="RatingStats" direction="horizontal">
+          {!overallAverage?.byWeeks.length || loadingReviews || loadingApp ? (
             <Space direction="vertical">
               <Text>Reviews fetch can take up to 5 minutes...</Text>
               <Spin />
@@ -179,7 +265,7 @@ const Dashboard: React.FC<RouteComponentProps> = ({
                 className="StatsSection"
                 direction="vertical"
               >
-                <Title level={4}>Overall rating</Title>
+                <Title level={4}>Last week rating</Title>
                 {overallAverage ? (
                   <>
                     <Rate allowHalf defaultValue={overallAverage.allTime} />
@@ -203,9 +289,9 @@ const Dashboard: React.FC<RouteComponentProps> = ({
                 <Title level={4}>Reviews</Title>
                 {reviewsDynamics ? (
                   <>
-                    <Title level={5} type="secondary">{`Total: ${reviewsDynamics.total}`}</Title>
+                    <Title level={5} type="secondary">{`Total: ${app.userRatingCount}`}</Title>
                     <Text type="secondary">
-                      {`Last 30 days: ${reviewsDynamics.lastWeek}`}
+                      {`Last 30 days: ${reviewsDynamics.total}`}
                     </Text>
                   </>
                 ) : <Text type="secondary">No data</Text>}
@@ -229,11 +315,79 @@ const Dashboard: React.FC<RouteComponentProps> = ({
                   </>
                 ) : <Text type="secondary">No data</Text>}
               </Space>
+              <Divider style={{ height: '70px' }} type="vertical" />
+              <Space
+                align="center"
+                className="StatsSection"
+                direction="vertical"
+              >
+                <Title level={4}>Sentiment</Title>
+                {reviewsDynamics ? (
+                  <>
+                    <Title level={5} type={(() => {
+                      switch(popularSentiment) {
+                        case 'Negative':
+                          return 'danger';
+                        case 'Neutral':
+                          return 'warning';
+                        case 'Positive':
+                          return 'success';
+                        default:
+                          return 'secondary';
+                      }
+                    })()}>{popularSentiment}</Title>
+                    <Text type="secondary">
+                      {`In previous mounth app had:`}
+                    </Text>
+                    <Text type="danger">
+                      Negative
+                    </Text>
+                  </>
+                ) : <Text type="secondary">No data</Text>}
+              </Space>
+              <Divider style={{ height: '70px' }} type="vertical" />
+              <Space
+                align="center"
+                className="StatsSection"
+                direction="vertical"
+              >
+                <Title level={4}>Popular topic</Title>
+                {reviewsDynamics ? (
+                  <>
+                    <Title level={5} type="secondary">{popularTopic}</Title>
+                    <Text type="secondary">
+                      {`In previous mounth app had:`}
+                    </Text>
+                    <Text type="secondary">
+                      Common
+                    </Text>
+                  </>
+                ) : <Text type="secondary">No data</Text>}
+              </Space>
+              <Divider style={{ height: '70px' }} type="vertical" />
+              <Space
+                align="center"
+                className="StatsSection"
+                direction="vertical"
+              >
+                <Title level={4}>Popular words</Title>
+                {reviewsDynamics ? (
+                  <>
+                    <Title level={5} type="secondary">crashes, addverts, loading</Title>
+                    <Text type="secondary">
+                      {`In previous mounth app had:`}
+                    </Text>
+                    <Text type="secondary">
+                      crashes, version, connection
+                    </Text>
+                  </>
+                ) : <Text type="secondary">No data</Text>}
+              </Space>
             </>)}
           </Space>
         </div>
         <div className="LocationData">
-          <div className="LocationMap">
+          {/* <div className="LocationMap">
             <GoogleMapReact
               defaultCenter={defaultCenter}
               defaultZoom={1}
@@ -251,25 +405,25 @@ const Dashboard: React.FC<RouteComponentProps> = ({
                 );
               })}
             </GoogleMapReact>
-          </div>
+          </div> */}
           <div className="LocationTable">
             <Table
               rowKey="id"
               pagination={{ pageSize: 10 }}
               scroll={{ y: 400 }}
               columns={locationColumns}
-              dataSource={locationsWithWeekDynamic}
-              expandable={{
-                expandedRowRender: (location) => (
-                  <Table
-                    rowKey="id"
-                    size="small" 
-                    columns={reviewsColumns}
-                    dataSource={location.reviews} 
-                  />
-                ),
-                rowExpandable: (location) => (!!location.reviews.length),
-              }}      
+              dataSource={appReviews}
+              // expandable={{
+              //   expandedRowRender: (location) => (
+              //     <Table
+              //       rowKey="id"
+              //       size="small" 
+              //       columns={reviewsColumns}
+              //       dataSource={location.reviews} 
+              //     />
+              //   ),
+              //   rowExpandable: (location) => (!!location.reviews.length),
+              // }}      
           />
           </div>
         </div>

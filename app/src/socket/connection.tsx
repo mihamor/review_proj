@@ -14,11 +14,11 @@ export const registerSocketConnection = (
   onDataEvent: (data: Location[]) => void,
 ) => {
   const client = new WebSocketClient('ws://localhost:3030/', 'echo-protocol');
-  client.onerror = () => {
-    console.log('Connection Error');
+  client.onerror = (error) => {
+    console.log('Connection Error', error);
   };
   client.onopen = () => {
-    console.log('WebSocket Client Connected');
+    console.log('WebSocket Client Connected')
 
     const fetchInitialData = () => {
       if (client.readyState === client.OPEN) {
